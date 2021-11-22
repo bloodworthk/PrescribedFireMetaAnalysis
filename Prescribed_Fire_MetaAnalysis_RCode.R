@@ -491,11 +491,71 @@ summary(comparedf(Kathryn_1_third,Sarah_1_third))
 
 #### Load Libraries and Set Working Directory #### 
 library(tidyverse)
+#install.packages("reshape")
+library(reshape)
 
 #working directory - KB - Mac
 setwd("/Users/kathrynbloodworth/Dropbox (Smithsonian)/Projects/Dissertation/TNC Prescribed Fire Meta-Analysis/Data")
 
+#### Set ggplot base ####
+#Set ggplot2 theme to black and white
+theme_set(theme_bw())
+#Update ggplot2 theme - make box around the x-axis title size 30, vertically justify x-axis title to 0.35, Place a margin of 15 around the x-axis title.  Make the x-axis title size 30. For y-axis title, make the box size 30, put the writing at a 90 degree angle, and vertically justify the title to 0.5.  Add a margin of 15 and make the y-axis text size 25. Make the plot title size 30 and vertically justify it to 2.  Do not add any grid lines.  Do not add a legend title, and make the legend size 20
+theme_update(axis.title.x=element_text(size=30, vjust=-0.35, margin=margin(t=15)),
+             axis.text.x=element_text(size=30), axis.title.y=element_text(size=30, angle=90, vjust=0.5,
+                                                                          margin=margin(r=15)), axis.text.y=element_text(size=30), plot.title =
+               element_text(size=30, vjust=2), panel.grid.major=element_blank(),
+             panel.grid.minor=element_blank(), legend.title=element_blank(),
+             legend.text=element_text(size=30))
+
+
 #### Load in Data ####
 
-#load in second round screening data extraction
+#load in second round sceening data extraction
 InitialDataExtraction<-read.csv("UPDATED_Second_Round_Screening_data_extraction.csv")
+
+
+#### Clean Up Data ####
+BasicDataExtraction<-InitialDataExtraction %>% 
+  select(-Updated_Master,-Assigned_To,-Accessible,-Downloaded,-Can.we.request.it.,-Requested,-X,-X.1,-X.2,-Study_ID_New) %>% 
+  #keep only data that we are interested in 
+  filter(Keeping=="yes") %>% 
+  #reassign unique identifier for each study
+  mutate(New_Study_ID = row_number())
+
+#### Graph showing number of studies for each response variable ####
+
+#Create data frame with just response variables
+ResponseVariables<-BasicDataExtraction %>% 
+  select(Total_Soil_Carbon,Total_Soil_Nitrogen,Microbial_Biomass,Arthropods,Birds,Small_Mammals,Plants)
+  
+#Create data frame with information on how many studies looked at each response variable
+ResponseVariables_Counted<-as.data.frame(sapply(X = ResponseVariables, FUN = table)) %>% 
+  #subset data to just look at counts of those papers that looked at each response variable
+  subset(rownames(ResponseVariables_Counted) %in% "yes")
+
+rownames(ResponseVariables_Counted)<-NULL
+
+#Make ResponseVariables_Counted Long instead of wide
+ResponseVariables_Counted_Long<-melt(ResponseVariables_Counted)
+  
+#Create graph with response variables on x axis and number of papers on y axis
+ggplot(ResponseVariables_Counted_Long,aes(x=reorder(variable,-value),y=value))+
+  #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.
+  geom_bar(stat="identity")+
+  #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
+  #Label the x-axis "Treatment"
+  xlab("Response Variables")+
+  #Label the y-axis "Species Richness"
+  ylab("Number of Papers")+
+  #Make the y-axis extend to 50
+  expand_limits(y=150)+
+  theme(axis.text.x=element_text(angle=45, hjust=1))+
+  scale_x_discrete(limits = c("Plants", "Birds", "Arthropods", "Small_Mammals","Total_Soil_Nitrogen","Total_Soil_Carbon","Microbial_Biomass"),breaks= c("Plants", "Birds", "Arthropods", "Small_Mammals","Total_Soil_Nitrogen","Total_Soil_Carbon","Microbial_Biomass"),labels = c("Plants", "Birds", "Arthropods", "Small Mammals","Soil Nitrogen","Soil Carbon","Microbial Biomass"))+
+  #add text with count above bar graphs
+  geom_text(aes(label=value), position=position_dodge(width=0.9), vjust=-0.25)
+#Save at the graph at 1400x1500
+
+
+
+
