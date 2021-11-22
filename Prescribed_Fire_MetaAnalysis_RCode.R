@@ -523,7 +523,7 @@ BasicDataExtraction<-InitialDataExtraction %>%
   #reassign unique identifier for each study
   mutate(New_Study_ID = row_number())
 
-#### Graph showing number of studies for each response variable ####
+#### Number of studies for each response variable ####
 
 #Create data frame with just response variables
 ResponseVariables<-BasicDataExtraction %>% 
@@ -556,6 +556,36 @@ ggplot(ResponseVariables_Counted_Long,aes(x=reorder(variable,-value),y=value))+
   geom_text(aes(label=value), position=position_dodge(width=0.9), vjust=-0.25)
 #Save at the graph at 1400x1500
 
-
-
+#### Number of Studies that looked at 2 or more variables compared to 1 ####
+NumResponseVariables<-BasicDataExtraction %>% 
+  select(New_Study_ID,Total_Soil_Carbon,Total_Soil_Nitrogen,Microbial_Biomass,Arthropods,Birds,Small_Mammals,Plants) %>% 
+  #make each yes a 1 and each no a 0
+  mutate(Total_Soil_Carbon_Count=ifelse(Total_Soil_Carbon=="yes",1,0)) %>% 
+  mutate(Total_Soil_Nitrogen_Count=ifelse(Total_Soil_Nitrogen=="yes",1,0)) %>% 
+  mutate(Microbial_Biomass_Count=ifelse(Microbial_Biomass=="yes",1,0)) %>% 
+  mutate(Arthropods_Count=ifelse(Arthropods=="yes",1,0)) %>% 
+  mutate(Birds_Count=ifelse(Birds=="yes",1,0)) %>%
+  mutate(Small_Mammals_Count=ifelse(Small_Mammals=="yes",1,0)) %>% 
+  mutate(Plants_Count=ifelse(Plants=="yes",1,0)) %>% 
+  #Remove old columns
+  select(-Total_Soil_Carbon,-Total_Soil_Nitrogen,-Microbial_Biomass,-Arthropods,-Birds,-Small_Mammals,-Plants) %>% 
+  #count up number of response variables studied for each paper
+  mutate(NumResponseVariables = select(., Total_Soil_Carbon_Count:Plants_Count) %>% 
+  rowSums(na.rm = TRUE)) %>% 
+  count(NumResponseVariables)
+  
+#Create graph with number of response variables studied in each paper on x axis and number of papers on y axis
+ggplot(subset(NumResponseVariables,NumResponseVariables!=0),aes(x=NumResponseVariables,y=n))+
+  #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.
+  geom_bar(stat="identity")+
+  #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
+  #Label the x-axis "Treatment"
+  xlab("Number of Response Variables")+
+  #Label the y-axis "Species Richness"
+  ylab("Number of Papers")+
+  #Make the y-axis extend to 50
+  expand_limits(y=160)+
+  #add text with count above bar graphs
+  geom_text(aes(label= n), position=position_dodge(width=0.9), vjust=-0.25)
+#Save at the graph at 1400x1500
 
