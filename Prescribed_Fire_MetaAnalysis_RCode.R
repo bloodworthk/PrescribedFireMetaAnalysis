@@ -626,7 +626,11 @@ TGP_MapData<-map_data("state")%>%
 TGP_MapData_Canada <- canada.cities %>% 
   filter(country.etc==c("SK","MB"))
 
-
+#create a dataframe for just response variables
+Map_ResponseVariables <- BasicDataExtraction %>% 
+  filter(Longitude!="",Longitude!="N/A",Longitude!="-") %>% 
+  mutate(Lat=as.numeric(Latitude)) %>% 
+  mutate(Long=as.numeric(Longitude))
 
 ##lat/long per Response variables 
 #Soil Carbon
@@ -716,7 +720,7 @@ ggplot()+
   ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
   xlab(expression("Longitude "*degree*"")) +
   labs(fill="Response Variable") + #legend label
-  theme(legend.position = "top")  #legend position
+  theme(legend.position=c(0.15,0.2))  #legend position
   
 
 
