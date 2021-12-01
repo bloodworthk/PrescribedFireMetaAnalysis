@@ -560,16 +560,16 @@ ggplot(ResponseVariables_Counted_Long,aes(x=reorder(variable,-value),y=value))+
   #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.
   geom_bar(stat="identity")+
   #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
-  #Label the x-axis "Treatment"
+  #Label the x-axis
   xlab("Response Variables")+
-  #Label the y-axis "Species Richness"
+  #Label the y-axis 
   ylab("Number of Papers")+
-  #Make the y-axis extend to 50
+  #Make the y-axis expanded
   expand_limits(y=150)+
   theme(axis.text.x=element_text(angle=45, hjust=1))+
-  scale_x_discrete(limits = c("Plants", "Birds", "Arthropods", "Small_Mammals","Total_Soil_Nitrogen","Total_Soil_Carbon","Microbial_Biomass"),breaks= c("Plants", "Birds", "Arthropods", "Small_Mammals","Total_Soil_Nitrogen","Total_Soil_Carbon","Microbial_Biomass"),labels = c("Plants", "Birds", "Arthropods", "Small Mammals","Soil Nitrogen","Soil Carbon","Microbial Biomass"))+
+  scale_x_discrete(limits = c("Plants", "Birds", "Arthropods", "Small_Mammals","Total_Soil_Nitrogen","Microbial_Biomass","Total_Soil_Carbon"),breaks= c("Plants", "Birds", "Arthropods", "Small_Mammals","Total_Soil_Nitrogen","Microbial_Biomass","Total_Soil_Carbon"),labels = c("Plants", "Birds", "Arthropods", "Small Mammals","Soil Nitrogen","Microbial Biomass","Soil Carbon"))+
   #add text with count above bar graphs
-  geom_text(aes(label=value), position=position_dodge(width=0.9), vjust=-0.25)
+  geom_text(aes(label=value), position=position_dodge(width=0.9), vjust=-0.25, size=10)
 #Save at the graph at 1400x1500
 
 #### Number of Studies that looked at 2 or more variables compared to 1 ####
@@ -721,6 +721,7 @@ ggplot()+
   xlab(expression("Longitude "*degree*"")) +
   labs(fill="Response Variable") + #legend label
   theme(legend.position=c(0.15,0.2))  #legend position
+#export at 1500 x 1000
   
 
 
