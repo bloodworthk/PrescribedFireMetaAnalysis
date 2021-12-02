@@ -508,6 +508,15 @@ library(reshape)
 #install.packages("mapproj")
 library(mapproj)
 
+# setting the color palatte
+# install.packagesTR("devtools")
+#devtools::install_github("katiejolly/nationalparkcolors")
+library(nationalparkcolors)
+GeneralGrantpal<-park_palette("GeneralGrant", 7)
+CraterLakepal <- park_palette("CraterLake", 7)
+
+
+
 #working directory - KB - Mac
 setwd("/Users/kathrynbloodworth/Dropbox (Smithsonian)/Projects/Dissertation/TNC Prescribed Fire Meta-Analysis/Data")
 
@@ -637,7 +646,7 @@ Map_ResponseVariables <- BasicDataExtraction %>%
 Map_ResponseVariables_SC<-Map_ResponseVariables %>% 
   select(New_Study_ID,Total_Soil_Carbon,Lat,Long) %>% 
   filter(Total_Soil_Carbon=="yes") %>% 
-  mutate(Response_Variable=ifelse(Total_Soil_Carbon=="yes","SoilCarbon","")) %>% 
+  mutate(Response_Variable=ifelse(Total_Soil_Carbon=="yes","Soil Carbon","")) %>% 
   mutate(Unique_ID="a") %>% 
   mutate(New_Study_ID=paste(New_Study_ID,Unique_ID,sep="")) %>% 
   select(-Total_Soil_Carbon,-Unique_ID)
@@ -646,7 +655,7 @@ Map_ResponseVariables_SC<-Map_ResponseVariables %>%
 Map_ResponseVariables_SN<-Map_ResponseVariables %>% 
   select(New_Study_ID,Total_Soil_Nitrogen,Lat,Long) %>% 
   filter(Total_Soil_Nitrogen=="yes")%>% 
-  mutate(Response_Variable=ifelse(Total_Soil_Nitrogen=="yes","SoilNitrogen","")) %>% 
+  mutate(Response_Variable=ifelse(Total_Soil_Nitrogen=="yes","Soil Nitrogen","")) %>% 
   mutate(Unique_ID="b") %>% 
   mutate(New_Study_ID=paste(New_Study_ID,Unique_ID,sep="")) %>% 
   select(-Total_Soil_Nitrogen,-Unique_ID)
@@ -655,7 +664,7 @@ Map_ResponseVariables_SN<-Map_ResponseVariables %>%
 Map_ResponseVariables_MB<-Map_ResponseVariables %>% 
   select(New_Study_ID,Microbial_Biomass,Lat,Long) %>% 
   filter(Microbial_Biomass=="yes")%>% 
-  mutate(Response_Variable=ifelse(Microbial_Biomass=="yes","MicrobialBiomass","")) %>% 
+  mutate(Response_Variable=ifelse(Microbial_Biomass=="yes","Microbial Biomass","")) %>% 
   mutate(Unique_ID="c") %>% 
   mutate(New_Study_ID=paste(New_Study_ID,Unique_ID,sep="")) %>% 
   select(-Microbial_Biomass,-Unique_ID)
@@ -682,7 +691,7 @@ Map_ResponseVariables_Bird<-Map_ResponseVariables %>%
 Map_ResponseVariables_SMam<-Map_ResponseVariables %>% 
   select(New_Study_ID,Small_Mammals,Lat,Long) %>% 
   filter(Small_Mammals=="yes")%>% 
-  mutate(Response_Variable=ifelse(Small_Mammals=="yes","SmallMammals","")) %>% 
+  mutate(Response_Variable=ifelse(Small_Mammals=="yes","Small Mammals","")) %>% 
   mutate(Unique_ID="f") %>% 
   mutate(New_Study_ID=paste(New_Study_ID,Unique_ID,sep="")) %>% 
   select(-Small_Mammals,-Unique_ID)
@@ -705,17 +714,16 @@ Map_ResponseVariables_LatLong<-Map_ResponseVariables_Arth %>%
   rbind(Map_ResponseVariables_SMam) %>% 
   rbind(Map_ResponseVariables_SN) 
 
-# setting the color palatte
-z.pal<-wes_palette("Zissou1", 100, type = "continuous")
 
 #map of locations of meta-analysis studies
 ggplot()+
   geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
-  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region),fill="gray")+
-  geom_polygon(data = TGP_MapData_Canada, aes(x=long, y=lat, group = country.etc),fill="gray")+
-  borders("state") +
+  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
+  geom_polygon(data = TGP_MapData_Canada, aes(x=long, y=lat, group = country.etc, fill = country.etc),fill="gray")+
+  borders("state",colour="black") +
   xlim(-180,-50)+
   geom_point(data=Map_ResponseVariables_LatLong, mapping=aes(x=Long,y=Lat,fill=Response_Variable),size=3.5,shape=21) +  #this is the dataframe of lat/long, and the points are being colored by num_codominants, with the point shape and size specified at the end fill=response variable
+  scale_colour_manual(values=GeneralGrantpal)+
   theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
   ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
   xlab(expression("Longitude "*degree*"")) +
