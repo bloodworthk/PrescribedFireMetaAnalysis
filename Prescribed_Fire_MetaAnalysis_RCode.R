@@ -537,7 +537,7 @@ world <- ne_countries(scale = "medium", returnclass = "sf")
 #### Load in Data ####
 
 #load in second round sceening data extraction
-InitialDataExtraction<-read.csv("UPDATED_Second_Round_Screening_data_extraction.csv")
+InitialDataExtraction<-read.csv("UPDATED_Second_Round_Screening_data_extraction_edited.csv")
 
 
 #### Clean Up Data ####
@@ -574,7 +574,7 @@ ggplot(ResponseVariables_Counted_Long,aes(x=reorder(variable,-value),y=value))+
   #Label the y-axis 
   ylab("Number of Papers")+
   #Make the y-axis expanded
-  expand_limits(y=150)+
+  expand_limits(y=200)+
   theme(axis.text.x=element_text(angle=45, hjust=1))+
   scale_x_discrete(limits = c("Plants", "Birds", "Arthropods", "Small_Mammals","Total_Soil_Nitrogen","Microbial_Biomass","Total_Soil_Carbon"),breaks= c("Plants", "Birds", "Arthropods", "Small_Mammals","Total_Soil_Nitrogen","Microbial_Biomass","Total_Soil_Carbon"),labels = c("Plants", "Birds", "Arthropods", "Small Mammals","Soil Nitrogen","Microbial Biomass","Soil Carbon"))+
   #add text with count above bar graphs
@@ -609,9 +609,9 @@ ggplot(subset(NumResponseVariables,NumResponseVariables!=0),aes(x=NumResponseVar
   #Label the y-axis "Species Richness"
   ylab("Number of Papers")+
   #Make the y-axis extend to 50
-  expand_limits(y=160)+
+  expand_limits(y=200)+
   #add text with count above bar graphs
-  geom_text(aes(label= n), position=position_dodge(width=0.9), vjust=-0.25)
+  geom_text(aes(label= n), position=position_dodge(width=0.9), vjust=-0.25, size=10)
 #Save at the graph at 1400x1500
 
 #### Map of Study Sites ####
