@@ -507,7 +507,6 @@ library(tidyverse)
 library(reshape)
 #install.packages("mapproj")
 library(mapproj)
-
 # setting the color palatte
 # install.packagesTR("devtools")
 #devtools::install_github("katiejolly/nationalparkcolors")
@@ -524,15 +523,12 @@ setwd("/Users/kathrynbloodworth/Dropbox (Smithsonian)/Projects/Dissertation/TNC 
 #Set ggplot2 theme to black and white
 theme_set(theme_bw())
 #Update ggplot2 theme - make box around the x-axis title size 30, vertically justify x-axis title to 0.35, Place a margin of 15 around the x-axis title.  Make the x-axis title size 30. For y-axis title, make the box size 30, put the writing at a 90 degree angle, and vertically justify the title to 0.5.  Add a margin of 15 and make the y-axis text size 25. Make the plot title size 30 and vertically justify it to 2.  Do not add any grid lines.  Do not add a legend title, and make the legend size 20
-theme_update(axis.title.x=element_text(size=30, vjust=-0.35, margin=margin(t=15)),
-             axis.text.x=element_text(size=30), axis.title.y=element_text(size=30, angle=90, vjust=0.5,
-                                                                          margin=margin(r=15)), axis.text.y=element_text(size=30), plot.title =
-               element_text(size=30, vjust=2), panel.grid.major=element_blank(),
+theme_update(axis.title.x=element_text(size=60, vjust=-0.35, margin=margin(t=15)),
+             axis.text.x=element_text(size=60), axis.title.y=element_text(size=60, angle=90, vjust=0.5,
+                                                                          margin=margin(r=15)), axis.text.y=element_text(size=60), plot.title =
+               element_text(size=60, vjust=2), panel.grid.major=element_blank(),
              panel.grid.minor=element_blank(), legend.title=element_blank(),
-             legend.text=element_text(size=30))
-
-#Map information
-world <- ne_countries(scale = "medium", returnclass = "sf")
+             legend.text=element_text(size=60))
 
 #### Load in Data ####
 
@@ -565,20 +561,20 @@ rownames(ResponseVariables_Counted)<-NULL
 ResponseVariables_Counted_Long<-melt(ResponseVariables_Counted)
   
 #Create graph with response variables on x axis and number of papers on y axis
-ggplot(ResponseVariables_Counted_Long,aes(x=reorder(variable,-value),y=value))+
+ggplot(ResponseVariables_Counted_Long,aes(x=reorder(variable,-value),y=value,fill=variable))+
   #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.
   geom_bar(stat="identity")+
-  #Make an error bar that represents the standard error within the data and place the error bars at position 0.9 and make them 0.2 wide.
   #Label the x-axis
   xlab("Response Variables")+
   #Label the y-axis 
   ylab("Number of Papers")+
+  scale_fill_manual(values=CraterLakepal)+
   #Make the y-axis expanded
   expand_limits(y=200)+
-  theme(axis.text.x=element_text(angle=45, hjust=1))+
+  theme(axis.text.x=element_text(angle=45, hjust=1),legend.position = "NONE")+
   scale_x_discrete(limits = c("Plants", "Birds", "Arthropods", "Small_Mammals","Total_Soil_Nitrogen","Microbial_Biomass","Total_Soil_Carbon"),breaks= c("Plants", "Birds", "Arthropods", "Small_Mammals","Total_Soil_Nitrogen","Microbial_Biomass","Total_Soil_Carbon"),labels = c("Plants", "Birds", "Arthropods", "Small Mammals","Soil Nitrogen","Microbial Biomass","Soil Carbon"))+
   #add text with count above bar graphs
-  geom_text(aes(label=value), position=position_dodge(width=0.9), vjust=-0.25, size=10)
+  geom_text(aes(label=value), position=position_dodge(width=0.9), vjust=-0.25, size=20)
 #Save at the graph at 1400x1500
 
 #### Number of Studies that looked at 2 or more variables compared to 1 ####
@@ -615,6 +611,9 @@ ggplot(subset(NumResponseVariables,NumResponseVariables!=0),aes(x=NumResponseVar
 #Save at the graph at 1400x1500
 
 #### Map of Study Sites ####
+
+#Map information
+world <- ne_countries(scale = "medium", returnclass = "sp")
 
 #create a dataframe with just lat/long measurements
 Map_Dataframe<-BasicDataExtraction %>% 
