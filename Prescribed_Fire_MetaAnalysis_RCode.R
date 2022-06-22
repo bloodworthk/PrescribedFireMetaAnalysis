@@ -43,7 +43,7 @@ library(arsenal)
 setwd("/Users/kjbloodw/Box/TNC_TGP_RxFire/Data")
 
 #Bloodworth - Mac
-setwd("/Users/kathrynbloodworth/Box/TNC_TGP_RxFire/Data")
+setwd("~/Library/CloudStorage/Box-Box/TNC_TGP_RxFire/Data")
 
 #### Read in Data frame with first 10 papers ####
 
@@ -533,7 +533,7 @@ theme_update(axis.title.x=element_text(size=60, vjust=-0.35, margin=margin(t=15)
 #### Load in Data ####
 
 #load in second round sceening data extraction
-InitialDataExtraction<-read.csv("UPDATED_Second_Round_Screening_data_extraction_edited.csv")
+InitialDataExtraction<-read.csv("Second_Round_Screening/UPDATED_Second_Round_Screening_data_extraction_edited.csv")
 
 
 #### Clean Up Data ####
@@ -713,6 +713,9 @@ Map_ResponseVariables_LatLong<-Map_ResponseVariables_Arth %>%
   rbind(Map_ResponseVariables_SMam) %>% 
   rbind(Map_ResponseVariables_SN) 
 
+#Write a csv file onto the computer
+write.csv(Map_ResponseVariables_LatLong, file = "Map_ResponseVariables_LatLong.csv")
+
 
 #map of locations of meta-analysis studies
 ggplot()+
@@ -730,5 +733,24 @@ ggplot()+
   theme(legend.position=c(0.15,0.2))  #legend position
 #export at 1500 x 1000
   
+
+#### Big data extraction ####
+
+#read in dataframe with data from main extraction
+Data_extraction<-read.csv("Data Extraction/PrescribedFire_DataExtraction_Main.csv")
+
+
+#Get basic information about data collected so far
+length(unique(Data_extraction$PDF_Study_ID)) #24 unique plant IDs
+
+Fire_categories<-Data_extraction %>% 
+  group_by(Treatment_Category) %>% 
+  summarise(Count_Treatment_Cat=n()) %>% 
+  ungroup() #201 data points for 1yr interval, 159 data points for 2-4yr interval, 97 data points for fire+grazing 
+  
+Removing_Papers<-BasicDataExtraction %>%
+  filter(Data.extraction.Screening..nos.=="no") %>% 
+  select(Reason.for.removing..big.data.extraction.,PDF_Study_ID,Author,Title,Latitude,Longitude,Total_Soil_Carbon,Total_Soil_Nitrogen,Microbial_Biomass,Arthropods,Birds,Small_Mammals,Plants,Data.extraction.Screening..nos.)
+
 
 
