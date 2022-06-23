@@ -741,16 +741,34 @@ Data_extraction<-read.csv("Data Extraction/PrescribedFire_DataExtraction_Main.cs
 
 
 #Get basic information about data collected so far
-length(unique(Data_extraction$PDF_Study_ID)) #24 unique plant IDs
+length(unique(Data_extraction$PDF_Study_ID)) #24 unique plant IDs  (means that 29% of papers were included in final extraction)
 
 Fire_categories<-Data_extraction %>% 
   group_by(Treatment_Category) %>% 
   summarise(Count_Treatment_Cat=n()) %>% 
   ungroup() #201 data points for 1yr interval, 159 data points for 2-4yr interval, 97 data points for fire+grazing 
   
-Removing_Papers<-BasicDataExtraction %>%
+Removing_Papers<-BasicDataExtraction %>% #83 papers were removed from study
   filter(Data.extraction.Screening..nos.=="no") %>% 
   select(Reason.for.removing..big.data.extraction.,PDF_Study_ID,Author,Title,Latitude,Longitude,Total_Soil_Carbon,Total_Soil_Nitrogen,Microbial_Biomass,Arthropods,Birds,Small_Mammals,Plants,Data.extraction.Screening..nos.)
 
+#map of big data extraction data points so far
+ggplot()+
+  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
+  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
+  geom_polygon(data = TGP_MapData_Canada, aes(x=long, y=lat, group = country.etc, fill = country.etc),fill="gray")+
+  borders("state",colour="black") +
+  xlim(-180,-50)+
+  geom_count(data=Data_extraction, mapping=aes(x=Longitude,y=Latitude,fill=PDF_Study_ID)) +  #this is the dataframe of lat/long, and the points are being colored by num_codominants, with the point shape and size specified at the end fill=response variable
+  scale_size_area()+
+  scale_colour_manual(values=GeneralGrantpal)+
+  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
+  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
+  xlab(expression("Longitude "*degree*"")) +
+  labs(fill="Response Variable") + #legend label
+  theme(legend.position=c(0.15,0.2))  #legend position
+#export at 1500 x 1000
 
 
+geom_count() +
+  scale_size_area()
