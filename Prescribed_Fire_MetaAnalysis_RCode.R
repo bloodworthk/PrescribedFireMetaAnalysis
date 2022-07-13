@@ -517,7 +517,7 @@ CraterLakepal <- park_palette("CraterLake", 7)
 
 
 #working directory - KB - Mac
-setwd("/Users/kathrynbloodworth/Dropbox (Smithsonian)/Projects/Dissertation/TNC Prescribed Fire Meta-Analysis/Data")
+setwd("~/Library/CloudStorage/Box-Box/TNC_TGP_RxFire/Data")
 
 #### Set ggplot base ####
 #Set ggplot2 theme to black and white
@@ -750,7 +750,9 @@ Fire_categories<-Data_extraction %>%
   
 Removing_Papers<-BasicDataExtraction %>% #83 papers were removed from study
   filter(Data.extraction.Screening..nos.=="no") %>% 
-  select(Reason.for.removing..big.data.extraction.,PDF_Study_ID,Author,Title,Latitude,Longitude,Total_Soil_Carbon,Total_Soil_Nitrogen,Microbial_Biomass,Arthropods,Birds,Small_Mammals,Plants,Data.extraction.Screening..nos.)
+  select(Reason.for.removing..big.data.extraction.,PDF_Study_ID,Author,Title,Latitude,Longitude,Total_Soil_Carbon,Total_Soil_Nitrogen,Microbial_Biomass,Arthropods,Birds,Small_Mammals,Plants,Data.extraction.Screening..nos.) %>% 
+  #add in column to say if we could extract data from paper based on a 1 year fire return interval as "control" instead of no burn
+  mutate(One_year_burn=ifelse(PDF_Study_ID==811, "could compare annual to 1 2 year burn",ifelse(PDF_Study_ID==212,"annual vs 4-6 year",ifelse(PDF_Study_ID==760,"annual vs 3yr but data not presented in extractable way",ifelse(PDF_Study_ID==648,"prescribed fire was studied but no context as to interval - check supplimental",ifelse(PDF_Study_ID==437,"One site was annually burned in spring (April) throughout the three years of the study (2000–2002) while the other site was left unburned - both were burned prior to study",ifelse(PDF_Study_ID==458,"annual vs 4 year - KNZ",ifelse(PDF_Study_ID==1146,"annual vs 4 year - KNZ",ifelse(PDF_Study_ID==602, "annual vs 4 year - KNZ", ifelse(PDF_Study_ID==586,"annual vs 4 year - KNZ",ifelse(PDF_Study_ID==966,"annual vs 4 year - KNZ",ifelse(PDF_Study_ID==883,"annual vs 4 year - KNZ",NA))))))))))))
 
 #map of big data extraction data points so far
 ggplot()+
@@ -768,7 +770,3 @@ ggplot()+
   labs(fill="Response Variable") + #legend label
   theme(legend.position=c(0.15,0.2))  #legend position
 #export at 1500 x 1000
-
-
-geom_count() +
-  scale_size_area()
