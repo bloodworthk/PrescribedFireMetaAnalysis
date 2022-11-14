@@ -738,6 +738,10 @@ ggplot()+
 
 #### Full Data Extraction ####
 
+#load packages
+
+library(lmerTest)
+
 #### Read in Data ####
 
 #read in dataframe with data from main extraction
@@ -782,65 +786,7 @@ Response_Variables_Study<-Data_extraction %>%
 
 #### Calculate Response Ratio - Hedges' G ####
 
-#Make two dataframes from Data Extraction so that control means are in their own columns
-Control_Means<-Data_extraction %>% 
-  select(PDF_Study_ID,Study_Point,Mean_NoBurn,Standard_Deviation_NoBurn,Standard_Error_NoBurn,Sample_number_NoBurn,Q1_control,median..Q2._control,Q3_control,Response_Variable) %>% 
-  mutate(ID=paste(PDF_Study_ID,Study_Point,sep="")) %>% 
-  mutate(Treatment_Assignment="C") %>% 
-  rename(Mean="Mean_NoBurn") %>% 
-  rename(Standard_Deviation="Standard_Deviation_NoBurn") %>% 
-  rename(Standard_Error="Standard_Error_NoBurn") %>% 
-  rename(Sample_number="Sample_number_NoBurn") %>% 
-  rename(Q1="Q1_control") %>% 
-  rename(median..Q2.="median..Q2._control") %>% 
-  rename(Q3="Q3_control")
-
-Data_extraction_Treatments<- Data_extraction %>% 
-  select(-Mean_NoBurn,-Standard_Deviation_NoBurn,-Standard_Error_NoBurn,-ConfidenceInterval_95,-Sample_number_NoBurn,-Q1_control,-median..Q2._control,-Q3_control) %>% 
-  mutate(Treatment_Assignment=ifelse(Treatment_Category=="fire + grazing","Tg",ifelse(Treatment_Category=="2-4yr","T4",ifelse(Treatment_Category=="1yr","T1",Treatment_Category)))) %>% 
-  mutate(ID=paste(PDF_Study_ID,Study_Point,sep="")) %>% 
-  rename(Mean="Mean_Category") %>% 
-  rename(Standard_Deviation="Standard_Deviation_Category") %>% 
-  rename(Standard_Error="Standard_Error_Category") %>% 
-  rename(Sample_number="Sample_number_Category") %>% 
-  rename(Q1="Q1_trt") %>% 
-  rename(median..Q2.="median..Q2._trt") %>% 
-  rename(Q3="Q3_trt") %>% 
-  select(PDF_Study_ID,Study_Point,Mean,Standard_Deviation,Standard_Error,Sample_number,Q1,median..Q2.,Q3,ID,Treatment_Assignment,Response_Variable)
-
-#Calculate RR using Hedges G
-RR<-Data_extraction_Treatments %>% 
-  rbind(Control_Means) %>%
-  #take mean of sample numbers that gave a range 
-  mutate(Sample_number=ifelse(Sample_number=="140-150",145,Sample_number)) %>% 
-  #Remove paper 594 because sample number is not known
-  filter(PDF_Study_ID!=594 & PDF_Study_ID!=1097 & PDF_Study_ID!=121 & PDF_Study_ID!=453) %>% 
-  select(ID,Response_Variable,Treatment_Assignment,Mean,Standard_Error,Sample_number) %>% 
-  filter(ID!="507d" & ID!="533v" & ID!="533p") %>% 
-  #filter out all studies that do not report sample number,standard error, or mean for now
-  na.omit(Mean) %>% 
-  filter(Sample_number!="")
-
-#Calculate the response ratio using the dataframe RR comparing the Mean across Treatment and Response  variable, while keeping ID seperate
- #Response_Ratio_Calc <- hedg_g(RR,
-         #Mean ~ Treatment_Assignment,
-         #ref_group = c("ID"))
-
- ##Maybe we could use this?
- #Response_Ratio<-esc_mean_se(grp1m = 8.5,   # mean of group 1
-             #grp1se = 1.5,  # standard error of group 1
-             #grp1n = 50,    # sample in group 1
-             #grp2m = 11,    # mean of group 2
-             #grp2se = 1.8,  # standard error of group 2
-             #grp2n = 60,    # sample in group 2
-             #es.type = "d") # convert to SMD; use "g" for Hedges' g
-#install.packages("esc")
-#library(esc)
-
-#install.packages("esvis")
-#library(esvis)
-
-#### Response Ratio by Hand ####
+#Response Ratio by Hand
 RR_by_Hand<-Data_extraction %>% 
   #take mean of sample numbers that gave a range 
   mutate(Sample_number_NoBurn=ifelse(Sample_number_NoBurn=="140-150",145,Sample_number_NoBurn)) %>% 
@@ -869,16 +815,93 @@ RR_Calc<-RR_by_Hand %>%
   #create two new columns with response variables seperated out into RV and Data Type
   separate(Response_Variable,c("ResponseVariable","DataType"),sep="_") %>% 
   #remove rarity
-  filter(Data_Type!="rarity")
+  filter(Data_Type!="rarity") %>% 
+  group_by(PDF_Study_ID,ResponseVariable,Data_Type,DataType, Treatment_Category) %>% 
+  mutate(Study_Point_n=length(Study_Point)) %>% 
+  ungroup()
 
+
+#### Visualize the data with Histograms ####
 #histogram of all data
 hist(RR_Calc$LnRR)
 
-#ggplot with facet wrap of 
+#ggplot with facet wrap of data type and response variables
 ggplot(RR_Calc, aes(x=LnRR, color=Treatment_Category,fill=Treatment_Category))+
   geom_histogram(position="identity",alpha=0.5)+
   facet_grid(Data_Type ~ ResponseVariable )
 #save at 2000 x 1000
+
+#### Statistical Models ####
+
+#### Plant Linear Models Models ####
+
+#Look at Diversity of Plants 
+Diversity_Plants_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
+anova(Diversity_Plants_glm) 
+
+#with random effect of PDF_Study ID
+Diversity_Plants_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
+anova(Diversity_Plants_Glmm)
+
+#with random effect of Study_Point_n nested in PDF_Study ID 
+Diversity_Plants_Glmm_nest <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID:Study_Point_n), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
+anova(Diversity_Plants_Glmm_nest)
+
+#Compare AIC Values
+AIC(Diversity_Plants_glm,Diversity_Plants_Glmm,Diversity_Plants_Glmm_nest) #Diversity_Plants_glm (simplest) is the best
+
+### 
+
+#Look at Abundance of Plants 
+Abundance_Plants_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
+anova(Abundance_Plants_glm) 
+
+#with random effect of PDF_Study ID
+Abundance_Plants_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
+anova(Abundance_Plants_Glmm)
+
+#with random effect of Study_Point_n nested in PDF_Study ID 
+Abundance_Plants_Glmm_nest <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID:Study_Point_n), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
+anova(Abundance_Plants_Glmm_nest)
+
+#Compare AIC Values
+AIC(Abundance_Plants_glm,Abundance_Plants_Glmm,Abundance_Plants_Glmm_nest) #Abundance_Plants_Glmm is the best but AIC is 1513.589 compared to glm which is 1521.799
+
+#### Arthropod Linear Models Models ####
+
+#Look at Diversity of Arthropods
+Diversity_Arthropods_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
+anova(Diversity_Arthropods_glm) 
+
+#with random effect of PDF_Study ID
+Diversity_Arthropods_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
+anova(Diversity_Arthropods_Glmm)
+
+#with random effect of Study_Point_n nested in PDF_Study ID 
+Diversity_Arthropods_Glmm_nest <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID:Study_Point_n), data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
+anova(Diversity_Arthropods_Glmm_nest)
+
+#Compare AIC Values
+AIC(Diversity_Arthropods_glm,Diversity_Arthropods_Glmm,Diversity_Arthropods_Glmm_nest) #Diversity_Arthropods_GLmm is the best but AIC of Glmm is 51.02890 and AIC of glm= 54.09142
+
+### 
+
+#Look at Abundance of Arthropods 
+Abundance_Arthropods_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
+anova(Abundance_Arthropods_glm) 
+
+#with random effect of PDF_Study ID
+Abundance_Arthropods_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
+anova(Abundance_Arthropods_Glmm)
+
+#with random effect of Study_Point_n nested in PDF_Study ID 
+Abundance_Arthropods_Glmm_nest <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID:Study_Point_n), data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
+anova(Abundance_Arthropods_Glmm_nest)
+
+#Compare AIC Values
+AIC(Abundance_Arthropods_glm,Abundance_Arthropods_Glmm,Abundance_Arthropods_Glmm_nest) #Abundance_Arthropods_Glmm is the best but AIC is 152.7377 compared to glm which is 154.7938
+
+
 
 
 
