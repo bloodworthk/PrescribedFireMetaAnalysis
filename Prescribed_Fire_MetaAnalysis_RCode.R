@@ -784,7 +784,7 @@ Response_Variables_Study<-Data_extraction %>%
 
 #Make two dataframes from Data Extraction so that control means are in their own columns
 Control_Means<-Data_extraction %>% 
-  select(PDF_Study_ID,Study_Point,Mean_NoBurn,Standard_Deviation_NoBurn,Standard_Error_NoBurn,ConfidenceInterval_95,Sample_number_NoBurn,Q1_control,median..Q2._control,Q3_control) %>% 
+  select(PDF_Study_ID,Study_Point,Mean_NoBurn,Standard_Deviation_NoBurn,Standard_Error_NoBurn,Sample_number_NoBurn,Q1_control,median..Q2._control,Q3_control,Response_Variable) %>% 
   mutate(ID=paste(PDF_Study_ID,Study_Point,sep="")) %>% 
   mutate(Treatment_Assignment="C") %>% 
   rename(Mean="Mean_NoBurn") %>% 
@@ -805,24 +805,42 @@ Data_extraction_Treatments<- Data_extraction %>%
   rename(Sample_number="Sample_number_Category") %>% 
   rename(Q1="Q1_trt") %>% 
   rename(median..Q2.="median..Q2._trt") %>% 
-  rename(Q3="Q3_trt")
+  rename(Q3="Q3_trt") %>% 
+  select(PDF_Study_ID,Study_Point,Mean,Standard_Deviation,Standard_Error,Sample_number,Q1,median..Q2.,Q3,ID,Treatment_Assignment,Response_Variable)
 
 #Calculate RR using Hedges G
 RR<-Data_extraction_Treatments %>% 
-  left_join(Control_Means) %>%
-  #Remove paper 594 because sample number is not known
-  filter(PDF_Study_ID!=594) %>% 
-  select(ID,Response_Variable,Treatment_Assignment,Mean,Standard_Error,Sample_number) %>% 
+  rbind(Control_Means) %>%
   #take mean of sample numbers that gave a range 
   mutate(Sample_number=ifelse(Sample_number=="140-150",145,Sample_number)) %>% 
+  #Remove paper 594 because sample number is not known
+  filter(PDF_Study_ID!=594 & PDF_Study_ID!=1097 & PDF_Study_ID!=121 & PDF_Study_ID!=453) %>% 
+  select(ID,Response_Variable,Treatment_Assignment,Mean,Standard_Error,Sample_number) %>% 
+  filter(ID!="507d" & ID!="533v" & ID!="533p") %>% 
   #filter out all studies that do not report sample number,standard error, or mean for now
   na.omit(Mean) %>% 
-  filter(Sample_number!="") %>% 
-  #Calculate the response ration
-  
+  filter(Sample_number!="")
+
+#Calculate the response ratio using the dataframe RR comparing the Mean across Treatment and Response  variable, while keeping ID seperate
+ Response_Ratio_Calc <- hedg_g(RR,
+         Mean ~ Treatment_Assignment,
+         ref_group = c("ID"))
+ 
+ Response_Ratio_Calc<-hedg_g(benchmarks, 
+        math ~ ell + frl + season,
+        ref_group = c("Non-ELL", "Non-FRL", "Fall"))
   
  
-
+ ##Maybe we could use this?
+ Response_Ratio<-esc_mean_se(grp1m = 8.5,   # mean of group 1
+             grp1se = 1.5,  # standard error of group 1
+             grp1n = 50,    # sample in group 1
+             grp2m = 11,    # mean of group 2
+             grp2se = 1.8,  # standard error of group 2
+             grp2n = 60,    # sample in group 2
+             es.type = "d") # convert to SMD; use "g" for Hedges' g
+#install.packages("esc")
+library(esc)
 
 #install.packages("esvis")
 library(esvis)
