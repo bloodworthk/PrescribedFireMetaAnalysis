@@ -45,6 +45,8 @@ setwd("/Users/kjbloodw/Box/TNC_TGP_RxFire/Data")
 #Bloodworth - Mac
 setwd("~/Library/CloudStorage/Box-Box/TNC_TGP_RxFire/Data")
 
+
+##### Pre Extraction Steps #####
 #### Read in Data frame with first 10 papers ####
 
 Web_of_Science_Articles<-read.csv("Papers/Articles_For_Screening_07_28_2020.csv", header = T)
@@ -734,26 +736,101 @@ ggplot()+
 #export at 1500 x 1000
   
 
-#### Big data extraction ####
+#### Full Data Extraction ####
+
+#### Read in Data ####
 
 #read in dataframe with data from main extraction
 Data_extraction<-read.csv("Data Extraction/PrescribedFire_DataExtraction_Main.csv")
 
-
+#### Calculate Methodological Information ####
 #Get basic information about data collected so far
-length(unique(Data_extraction$PDF_Study_ID)) #24 unique plant IDs  (means that 29% of papers were included in final extraction)
+length(unique(Data_extraction$PDF_Study_ID)) #40 unique paper IDs
 
+#determine how many papers are in each fire return interval category
 Fire_categories<-Data_extraction %>% 
   group_by(Treatment_Category) %>% 
   summarise(Count_Treatment_Cat=n()) %>% 
-  ungroup() #201 data points for 1yr interval, 159 data points for 2-4yr interval, 97 data points for fire+grazing 
-  
-Removing_Papers<-BasicDataExtraction %>% #83 papers were removed from study
-  filter(Data.extraction.Screening..nos.=="no") %>% 
-  select(Reason.for.removing..big.data.extraction.,PDF_Study_ID,Author,Title,Latitude,Longitude,Total_Soil_Carbon,Total_Soil_Nitrogen,Microbial_Biomass,Arthropods,Birds,Small_Mammals,Plants,Data.extraction.Screening..nos.) %>% 
-  #add in column to say if we could extract data from paper based on a 1 year fire return interval as "control" instead of no burn
-  mutate(One_year_burn=ifelse(PDF_Study_ID==811, "could compare annual to 1 2 year burn",ifelse(PDF_Study_ID==212,"annual vs 4-6 year",ifelse(PDF_Study_ID==760,"annual vs 3yr but data not presented in extractable way",ifelse(PDF_Study_ID==648,"prescribed fire was studied but no context as to interval - check supplimental",ifelse(PDF_Study_ID==437,"One site was annually burned in spring (April) throughout the three years of the study (2000–2002) while the other site was left unburned - both were burned prior to study",ifelse(PDF_Study_ID==458,"annual vs 4 year - KNZ",ifelse(PDF_Study_ID==1146,"annual vs 4 year - KNZ",ifelse(PDF_Study_ID==602, "annual vs 4 year - KNZ", ifelse(PDF_Study_ID==586,"annual vs 4 year - KNZ",ifelse(PDF_Study_ID==966,"annual vs 4 year - KNZ",ifelse(PDF_Study_ID==883,"annual vs 4 year - KNZ",NA))))))))))))
+  ungroup() #255 data points for 1yr interval, 202 data points for 2-4yr interval, 193 data points for fire+grazing 
 
+#Determine how many years the data points came from
+Study_Years<-Data_extraction %>% 
+  group_by(Year) %>% 
+  summarise(Count_Year=n()) %>% 
+  ungroup() 
+
+#Determine how many data points of each response variables
+Response_Variables<-Data_extraction %>% 
+  group_by(Response_Variable) %>% 
+  summarise(Count_ResponseVariable=n()) %>% 
+  ungroup() 
+
+#Determine how many studies of each response variables
+Response_Variables_Study<-Data_extraction %>% 
+  group_by(PDF_Study_ID,Response_Variable) %>% 
+  summarise(Count_StudyID=n()) %>% 
+  ungroup() %>% 
+  group_by(Response_Variable) %>% 
+  summarise(Count_StudyID_Variable=n())
+
+
+#Removing_Papers<-BasicDataExtraction %>% #83 papers were removed from study
+  #filter(Data.extraction.Screening..nos.=="no") %>% 
+  #select(Reason.for.removing..big.data.extraction.,PDF_Study_ID,Author,Title,Latitude,Longitude,Total_Soil_Carbon,Total_Soil_Nitrogen,Microbial_Biomass,Arthropods,Birds,Small_Mammals,Plants,Data.extraction.Screening..nos.) %>% 
+  #add in column to say if we could extract data from paper based on a 1 year fire return interval as "control" instead of no burn
+  #mutate(One_year_burn=ifelse(PDF_Study_ID==811, "could compare annual to 1 2 year burn",ifelse(PDF_Study_ID==212,"annual vs 4-6 year",ifelse(PDF_Study_ID==760,"annual vs 3yr but data not presented in extractable way",ifelse(PDF_Study_ID==648,"prescribed fire was studied but no context as to interval - check supplimental",ifelse(PDF_Study_ID==437,"One site was annually burned in spring (April) throughout the three years of the study (2000–2002) while the other site was left unburned - both were burned prior to study",ifelse(PDF_Study_ID==458,"annual vs 4 year - KNZ",ifelse(PDF_Study_ID==1146,"annual vs 4 year - KNZ",ifelse(PDF_Study_ID==602, "annual vs 4 year - KNZ", ifelse(PDF_Study_ID==586,"annual vs 4 year - KNZ",ifelse(PDF_Study_ID==966,"annual vs 4 year - KNZ",ifelse(PDF_Study_ID==883,"annual vs 4 year - KNZ",NA))))))))))))
+
+#### Calculate Response Ratio - Hedges' G ####
+
+#Make two dataframes from Data Extraction so that control means are in their own columns
+Control_Means<-Data_extraction %>% 
+  select(PDF_Study_ID,Study_Point,Mean_NoBurn,Standard_Deviation_NoBurn,Standard_Error_NoBurn,ConfidenceInterval_95,Sample_number_NoBurn,Q1_control,median..Q2._control,Q3_control) %>% 
+  mutate(ID=paste(PDF_Study_ID,Study_Point,sep="")) %>% 
+  mutate(Treatment_Assignment="C") %>% 
+  rename(Mean="Mean_NoBurn") %>% 
+  rename(Standard_Deviation="Standard_Deviation_NoBurn") %>% 
+  rename(Standard_Error="Standard_Error_NoBurn") %>% 
+  rename(Sample_number="Sample_number_NoBurn") %>% 
+  rename(Q1="Q1_control") %>% 
+  rename(median..Q2.="median..Q2._control") %>% 
+  rename(Q3="Q3_control")
+
+Data_extraction_Treatments<- Data_extraction %>% 
+  select(-Mean_NoBurn,-Standard_Deviation_NoBurn,-Standard_Error_NoBurn,-ConfidenceInterval_95,-Sample_number_NoBurn,-Q1_control,-median..Q2._control,-Q3_control) %>% 
+  mutate(Treatment_Assignment=ifelse(Treatment_Category=="fire + grazing","Tg",ifelse(Treatment_Category=="2-4yr","T4",ifelse(Treatment_Category=="1yr","T1",Treatment_Category)))) %>% 
+  mutate(ID=paste(PDF_Study_ID,Study_Point,sep="")) %>% 
+  rename(Mean="Mean_Category") %>% 
+  rename(Standard_Deviation="Standard_Deviation_Category") %>% 
+  rename(Standard_Error="Standard_Error_Category") %>% 
+  rename(Sample_number="Sample_number_Category") %>% 
+  rename(Q1="Q1_trt") %>% 
+  rename(median..Q2.="median..Q2._trt") %>% 
+  rename(Q3="Q3_trt")
+
+#Calculate RR using Hedges G
+RR<-Data_extraction_Treatments %>% 
+  left_join(Control_Means) %>%
+  #Remove paper 594 because sample number is not known
+  filter(PDF_Study_ID!=594) %>% 
+  select(ID,Response_Variable,Treatment_Assignment,Mean,Standard_Error,Sample_number) %>% 
+  #take mean of sample numbers that gave a range 
+  mutate(Sample_number=ifelse(Sample_number=="140-150",145,Sample_number)) %>% 
+  #filter out all studies that do not report sample number,standard error, or mean for now
+  na.omit(Mean) %>% 
+  filter(Sample_number!="") %>% 
+  #Calculate the response ration
+  
+  
+ 
+
+
+#install.packages("esvis")
+library(esvis)
+
+
+
+
+#### Graphs ####
 #map of big data extraction data points so far
 ggplot()+
   geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
@@ -770,3 +847,4 @@ ggplot()+
   labs(fill="Response Variable") + #legend label
   theme(legend.position=c(0.15,0.2))  #legend position
 #export at 1500 x 1000
+
