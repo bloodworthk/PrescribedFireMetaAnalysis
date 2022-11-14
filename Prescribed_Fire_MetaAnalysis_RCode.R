@@ -822,29 +822,61 @@ RR<-Data_extraction_Treatments %>%
   filter(Sample_number!="")
 
 #Calculate the response ratio using the dataframe RR comparing the Mean across Treatment and Response  variable, while keeping ID seperate
- Response_Ratio_Calc <- hedg_g(RR,
-         Mean ~ Treatment_Assignment,
-         ref_group = c("ID"))
- 
- Response_Ratio_Calc<-hedg_g(benchmarks, 
-        math ~ ell + frl + season,
-        ref_group = c("Non-ELL", "Non-FRL", "Fall"))
-  
- 
+ #Response_Ratio_Calc <- hedg_g(RR,
+         #Mean ~ Treatment_Assignment,
+         #ref_group = c("ID"))
+
  ##Maybe we could use this?
- Response_Ratio<-esc_mean_se(grp1m = 8.5,   # mean of group 1
-             grp1se = 1.5,  # standard error of group 1
-             grp1n = 50,    # sample in group 1
-             grp2m = 11,    # mean of group 2
-             grp2se = 1.8,  # standard error of group 2
-             grp2n = 60,    # sample in group 2
-             es.type = "d") # convert to SMD; use "g" for Hedges' g
+ #Response_Ratio<-esc_mean_se(grp1m = 8.5,   # mean of group 1
+             #grp1se = 1.5,  # standard error of group 1
+             #grp1n = 50,    # sample in group 1
+             #grp2m = 11,    # mean of group 2
+             #grp2se = 1.8,  # standard error of group 2
+             #grp2n = 60,    # sample in group 2
+             #es.type = "d") # convert to SMD; use "g" for Hedges' g
 #install.packages("esc")
-library(esc)
+#library(esc)
 
 #install.packages("esvis")
-library(esvis)
+#library(esvis)
 
+#### Response Ratio by Hand ####
+RR_by_Hand<-Data_extraction %>% 
+  #take mean of sample numbers that gave a range 
+  mutate(Sample_number_NoBurn=ifelse(Sample_number_NoBurn=="140-150",145,Sample_number_NoBurn)) %>% 
+  mutate(Sample_number_Category=ifelse(Sample_number_Category=="140-150",145,Sample_number_Category)) %>% 
+  #Remove paper 594 because sample number is not known -  #go back and remove most of this after editing the data
+  filter(PDF_Study_ID!=594 & PDF_Study_ID!=1097 & PDF_Study_ID!=121 & PDF_Study_ID!=453 & PDF_Study_ID!="507d" & PDF_Study_ID!="533v" & PDF_Study_ID!="533p")
+
+RR_by_Hand$Sample_number_Category=as.numeric(RR_by_Hand$Sample_number_Category)
+RR_by_Hand$Sample_number_NoBurn=as.numeric(RR_by_Hand$Sample_number_NoBurn)
+
+RR_Calc<-RR_by_Hand %>% 
+  #calculate standard deviation
+  mutate(Standard_Dev_Cat=Standard_Error_Category/(sqrt(Sample_number_Category)),Standard_Dev_Cont=Standard_Error_NoBurn/(sqrt(Sample_number_NoBurn))) %>% 
+  #Calculate pooled SD
+  mutate(PooledSD=sqrt(((Sample_number_Category-1)*Standard_Dev_Cat^2 + (Sample_number_NoBurn-1)*Standard_Dev_Cont^2) / (Sample_number_Category+Sample_number_NoBurn-2))) %>% 
+  #calculate RR (Hedges G)
+  mutate(Hedges_G_RR=(Mean_Category-Mean_NoBurn)/PooledSD) %>% 
+  #get direction of RR
+  mutate(Response_Direction=ifelse(Hedges_G_RR<1,-1,ifelse(Hedges_G_RR>1,1,Hedges_G_RR))) %>% 
+  #Create column with absolute values of hedges G number
+  mutate(Abs_Hedges_G_RR=abs(Hedges_G_RR)) %>% 
+  #LnRR + 1
+  mutate(LN_Hedges_G_RR=log(Abs_Hedges_G_RR+1)) %>% 
+  #multiply response direction by LnRR
+  mutate(LnRR=(Response_Direction*LN_Hedges_G_RR)) %>% 
+  #create two new columns with response variables seperated out into RV and Data Type
+  separate(Response_Variable,c("ResponseVariable","DataType"),sep="_") 
+
+#histogram of all data
+hist(RR_Calc$LnRR)
+
+#ggplot with facet wrap of 
+ggplot(RR_Calc, aes(x=LnRR, color=Treatment_Category,fill=Treatment_Category))+
+  geom_histogram(position="identity",alpha=0.5)+
+  facet_grid(ResponseVariable ~ Data_Type)
+#save at 2000 x 1000
 
 
 
