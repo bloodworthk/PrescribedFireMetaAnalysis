@@ -867,7 +867,9 @@ RR_Calc<-RR_by_Hand %>%
   #multiply response direction by LnRR
   mutate(LnRR=(Response_Direction*LN_Hedges_G_RR)) %>% 
   #create two new columns with response variables seperated out into RV and Data Type
-  separate(Response_Variable,c("ResponseVariable","DataType"),sep="_") 
+  separate(Response_Variable,c("ResponseVariable","DataType"),sep="_") %>% 
+  #remove rarity
+  filter(Data_Type!="rarity")
 
 #histogram of all data
 hist(RR_Calc$LnRR)
@@ -875,7 +877,7 @@ hist(RR_Calc$LnRR)
 #ggplot with facet wrap of 
 ggplot(RR_Calc, aes(x=LnRR, color=Treatment_Category,fill=Treatment_Category))+
   geom_histogram(position="identity",alpha=0.5)+
-  facet_grid(ResponseVariable ~ Data_Type)
+  facet_grid(Data_Type ~ ResponseVariable )
 #save at 2000 x 1000
 
 
