@@ -828,7 +828,7 @@ hist(RR_Calc$LnRR)
 #ggplot with facet wrap of data type and response variables
 ggplot(RR_Calc, aes(x=LnRR, color=Treatment_Category,fill=Treatment_Category))+
   geom_histogram(position="identity",alpha=0.5)+
-  facet_grid(Data_Type ~ ResponseVariable )
+  facet_grid(Data_Type ~ ResponseVariable)
 #save at 2000 x 1000
 
 #### Statistical Models ####
@@ -901,6 +901,31 @@ anova(Abundance_Arthropods_Glmm_nest)
 #Compare AIC Values
 AIC(Abundance_Arthropods_glm,Abundance_Arthropods_Glmm,Abundance_Arthropods_Glmm_nest) #Abundance_Arthropods_Glmm is the best but AIC is 152.7377 compared to glm which is 154.7938
 
+
+#### Graphs ####
+
+#Make Dataframe for graphs 
+RR_Calc_Avg<-RR_Calc %>% 
+  group_by(ResponseVariable, Treatment_Category, Data_Type) %>%
+  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
+  mutate(St_Error=std/sqrt(n)) %>% 
+  ungroup()
+
+
+#Abundance
+ggplot(data=subset(RR_Calc_Avg,Data_Type=="abundance"),aes(x=Mean, y=Treatment_Category)) +
+  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
+  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
+  geom_point(size=4) +
+  facet_wrap(~ResponseVariable)
+
+
+#Diversity
+ggplot(data=subset(RR_Calc_Avg,Data_Type=="diversity"),aes(x=Mean, y=Treatment_Category)) +
+  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
+  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
+  geom_point(size=4) +
+  facet_wrap(~ResponseVariable)
 
 
 
