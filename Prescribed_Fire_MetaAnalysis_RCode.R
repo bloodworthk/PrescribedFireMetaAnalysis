@@ -839,7 +839,6 @@ ggplot(RR_Calc, aes(x=LnRR, color=Treatment_Category,fill=Treatment_Category))+
 #### Statistical Models ####
 
 #### Plant Glm Models ####
-### Use basic glm for all analyses
 
 RR_Calc$Treatment_Category=as.factor(RR_Calc$Treatment_Category)
 
@@ -863,6 +862,35 @@ anova(Diversity_Arthropods_glm)
 #Look at Abundance of Arthropods 
 Abundance_Arthropods_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
 anova(Abundance_Arthropods_glm) 
+
+#### Birds GLMs ####
+
+#Look at Diversity of Birds
+Diversity_Birds_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="diversity")) #not enough data to run
+
+#Look at Abundance of Birds
+Abundance_Birds_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="abundance"))
+anova(Abundance_Birds_glm) 
+
+#### Small Mammals GLMs ####
+#no data for diversity
+
+#Look at Abundance of Small Mammals
+Abundance_SmallMammals_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="SmallMammal" & Data_Type=="abundance"))
+anova(Abundance_SmallMammals_glm) 
+
+#### Total Soil Carbon GLMs ####
+
+#Look at Abundance of Total Soil Carbon
+Abundance_TSC_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="TotalSoilCarbon" & Data_Type=="abundance"))
+anova(Abundance_TSC_glm)
+
+#### Total Soil Nitrogen GLMs ####
+
+#Look at Abundance of Total Soil Nitrogen
+Abundance_TSN_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="TotalSoilNitrogen" & Data_Type=="abundance"))
+anova(Abundance_TSN_glm)
+
 
 #### Graphs of RR by Response Variable ####
 
@@ -891,8 +919,10 @@ ggplot(data=subset(RR_Calc_Avg,Data_Type=="diversity"),aes(x=Mean, y=Treatment_C
 
 #### Subsetting by Taxanomic Group ####
 
-#Diversity
-Plant_Diversity<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity")) %>% 
+#### Plants by Taxanomic and Data Unit ####
+
+### Plant Diversity (taxa)
+Plant_Diversity_Taxa<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity")) %>% 
   mutate(taxonomic_group=ifelse(taxonomic_group=="","Total",ifelse(taxonomic_group=="All","Total",taxonomic_group))) %>% 
   filter(taxonomic_group!="native species" & taxonomic_group!="exotic species" & taxonomic_group!="native" & taxonomic_group!="exoitic" & taxonomic_group!="C4 grass" & taxonomic_group!="C3 grass")
 
@@ -902,13 +932,18 @@ Plant_Diversity_Avg<-Plant_Diversity %>%
   mutate(St_Error=std/sqrt(n)) %>% 
   ungroup()
 
+#Plot
 ggplot(Plant_Diversity_Avg,aes(x=Mean, y=Treatment_Category)) +
   geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
   geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
   geom_point(size=4) +
   facet_wrap(~taxonomic_group)
 
-####Abundance (biomass)
+#Model
+Plant_Diversity_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Diversity_Taxa)
+anova(Plant_Diversity_Taxa_glm) 
+
+### Plant Abundance (biomass)
 Plant_Abundance_Biomass<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance")) %>% 
   #removing % biomass because it's not comparable with biomass
   filter(Data_Units!="canopy cover (%)" & Data_Units!="cover" & Data_Units!="% cover" & Data_Units!="total cover (%)" & Data_Units!="biomass (%)" & Data_Units!="composition (%)" & Data_Units!="absolute species cover (%) " & Data_Units!="cover (%)" & Data_Units!="density (number of contracts with a vertical 4 mm-diameter rod)" & Data_Units!="canopy cover" & Data_Units!="average cover (0.1 m2)")
@@ -924,7 +959,11 @@ ggplot(Plant_Abundance_Biomass_Avg,aes(x=Mean, y=Treatment_Category)) +
   geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
   geom_point(size=4) 
 
-####Abundance (biomass*taxonomic group)
+#Model
+Plant_Abundance_Biomass_glm <- glm(LnRR ~ Treatment_Category, data = Plant_Abundance_Biomass)
+anova(Plant_Abundance_Biomass_glm) 
+
+### Plant Abundance (biomass*taxonomic group)
 Plant_Abundance_Biomass_Taxa<-Plant_Abundance_Biomass %>% 
   #grouping all total biomass and woody and shrubs together 
   mutate(taxonomic_group=ifelse(taxonomic_group=="","Total",ifelse(taxonomic_group=="grass ","grasses",ifelse(taxonomic_group=="grass biomass","grasses",ifelse(taxonomic_group=="forb biomass","forbs",ifelse(taxonomic_group=="forb","forbs",taxonomic_group)))))) %>% 
@@ -936,13 +975,19 @@ Plant_Abundance_Biomass_Taxa_Avg<-Plant_Abundance_Biomass_Taxa%>%
   mutate(St_Error=std/sqrt(n)) %>% 
   ungroup()
 
+#Graph
 ggplot(Plant_Abundance_Biomass_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
   geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
   geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
   geom_point(size=4) +
   facet_wrap(~taxonomic_group)
 
-#### Abundance (cover)
+#Model
+Plant_Abundance_Biomass_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Abundance_Biomass_Taxa)
+anova(Plant_Abundance_Biomass_Taxa_glm) 
+
+
+#### Plant Abundance (cover)
 Plant_Abundance_Cover<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance")) %>% 
   #removing % biomass because it's not comparable with biomass
   filter(Data_Units!="total ANPP (g m-2)" & Data_Units!="biomass (g.m-2)" & Data_Units!="total plant biomass (g.m-2)" & Data_Units!="biomass (%)" & Data_Units!="total ANPP" & Data_Units!="biomass (g/m2)" & Data_Units!="ANPP (g m-2)" & Data_Units!="dry biomass (g/m2)" & Data_Units!="aboveground biomass (g/m2)" & Data_Units!="density (number of contracts with a vertical 4 mm-diameter rod)" & Data_Units!="aboveground NPP (gm-2)" & Data_Units!="residual biomass (g/m2) - average standing crop biomass (dry mass)")
@@ -953,10 +998,15 @@ Plant_Abundance_Cover_Avg<-Plant_Abundance_Cover %>%
   mutate(St_Error=std/sqrt(n)) %>% 
   ungroup()
 
+#Graph
 ggplot(Plant_Abundance_Cover_Avg,aes(x=Mean, y=Treatment_Category)) +
   geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
   geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
   geom_point(size=4) 
+
+#Model
+Plant_Abundance_Cover_glm <- glm(LnRR ~ Treatment_Category, data = Plant_Abundance_Cover)
+anova(Plant_Abundance_Cover_glm)
 
 ####Abundance (cover*taxonomic group)
 Plant_Abundance_Cover_Taxa<-Plant_Abundance_Cover %>% 
@@ -971,46 +1021,194 @@ Plant_Abundance_Cover_Taxa_Avg<-Plant_Abundance_Cover_Taxa%>%
   mutate(St_Error=std/sqrt(n)) %>% 
   ungroup()
 
+#Graph
 ggplot(Plant_Abundance_Cover_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
   geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
   geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
   geom_point(size=4) +
   facet_wrap(~taxonomic_group)
 
+#Model
+Plant_Abundance_Cover_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Abundance_Cover_Taxa)
+anova(Plant_Abundance_Cover_Taxa_glm)
 
-## Look at unique taxonomic groups for every response variable
+#### Arthropods by Taxanomic and Data Unit ####
+
+### Arthropod Abundance (count)
+Arthro_Abundance_Count<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance")) %>%
+  filter(Data_Units=="count") #only two data points - did not proceed
+
+### Arthropod Abundance (density (individuals / m2))
+Arthro_Abundance_Density<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance")) %>%
+  filter(Data_Units=="density (individuals / m2)") #only one data points - did not proceed
+
+### Arthropod Abundance (Biomass)
+Arthro_Abundance_Biomass<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance")) %>%
+  filter(Data_Units!="count" & Data_Units!="density (individuals / m2)" & Data_Units!="relative abundance (%)" & Data_Units!="relative abundance (%)") 
+
+Arthro_Abundance_Biomass_Avg<-Arthro_Abundance_Biomass %>% 
+  group_by(Treatment_Category) %>%
+  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
+  mutate(St_Error=std/sqrt(n)) %>% 
+  ungroup()
+
+#Plot
+ggplot(Arthro_Abundance_Biomass_Avg,aes(x=Mean, y=Treatment_Category)) +
+  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
+  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
+  geom_point(size=4) 
+
+#Model
+Arthro_Abundance_Biomass_glm <- glm(LnRR ~ Treatment_Category, data = Arthro_Abundance_Biomass)
+anova(Arthro_Abundance_Biomass_glm) 
+
+### Arthropod Abundance (Biomass*orders)
+Arthro_Abundance_Biomass_Taxa<-Arthro_Abundance_Biomass %>%
+  mutate(taxonomic_group=ifelse(taxonomic_group=="","Total",ifelse(taxonomic_group=="total invertebrates","Total",ifelse(taxonomic_group=="total abundance","Total",ifelse(taxonomic_group=="total biomass","Total",taxonomic_group))))) %>% 
+  filter(taxonomic_group!="butterfly")
+
+Arthro_Abundance_Biomass_Taxa_Avg<-Arthro_Abundance_Biomass_Taxa %>% 
+  group_by(Treatment_Category,taxonomic_group) %>%
+  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
+  mutate(St_Error=std/sqrt(n)) %>% 
+  ungroup()
+
+#Plot
+ggplot(Arthro_Abundance_Biomass_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
+  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
+  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
+  geom_point(size=4)+
+  facet_wrap(~taxonomic_group)
+
+#Model
+Arthro_Abundance_Biomass_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Arthro_Abundance_Biomass_Taxa)
+anova(Arthro_Abundance_Biomass_Taxa_glm) 
+
+### Arthropod Abundance (relative Abundance)
+Arthro_Abundance_RelAbund<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance")) %>%
+  filter(Data_Units=="relative abundance (%)") 
+
+Arthro_Abundance_RelAbund_Avg<-Arthro_Abundance_RelAbund %>% 
+  group_by(Treatment_Category) %>%
+  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
+  mutate(St_Error=std/sqrt(n)) %>% 
+  ungroup()
+
+#Plot
+ggplot(Arthro_Abundance_RelAbund_Avg,aes(x=Mean, y=Treatment_Category)) +
+  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
+  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
+  geom_point(size=4) 
+
+#Model
+Arthro_Abundance_RelAbund_glm <- glm(LnRR ~ Treatment_Category, data = Arthro_Abundance_RelAbund)
+anova(Arthro_Abundance_RelAbund_glm)
+
+### Arthropod Abundance (relative abundance*grassfeeders vs forb/mixed feeders)
+#can use above dataframe because there is no other taxonomic groups
+
+Arthro_Abundance_RelAbund_Avg_Taxa<-Arthro_Abundance_RelAbund %>% 
+  group_by(Treatment_Category,taxonomic_group) %>%
+  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
+  mutate(St_Error=std/sqrt(n)) %>% 
+  ungroup()
+
+#Plot
+ggplot(Arthro_Abundance_RelAbund_Avg_Taxa,aes(x=Mean, y=Treatment_Category)) +
+  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
+  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
+  geom_point(size=4) +
+  facet_wrap(~taxonomic_group)
+
+#Model
+Arthro_Abundance_RelAbund_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data =Arthro_Abundance_RelAbund)
+anova(Arthro_Abundance_RelAbund_glm) 
+
+### Arthropod Diversity (richness)
+Arthro_Diversity_Richness<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity")) %>%
+  filter(Data_Units!="log series α" & Data_Units!= "diversity (shannon diversity)")
+
+Arthro_Diversity_Richness_Avg<-Arthro_Diversity_Richness %>% 
+  group_by(Treatment_Category) %>%
+  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
+  mutate(St_Error=std/sqrt(n)) %>% 
+  ungroup()
+
+#Plot
+ggplot(Arthro_Diversity_Richness_Avg,aes(x=Mean, y=Treatment_Category)) +
+  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
+  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
+  geom_point(size=4) 
+
+#Model
+Arthro_Diversity_Richness_glm <- glm(LnRR ~ Treatment_Category, data = Arthro_Diversity_Richness)
+anova(Arthro_Diversity_Richness_glm) 
+
+### Arthropod Diversity (shannon's)
+Arthro_Diversity_Shannons<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity")) %>%
+  filter(Data_Units!="species richness" & Data_Units!= "diversity (shannon diversity)" & Data_Units!= "S (species richness)" & Data_Units!= "species richness ")
+
+Arthro_Diversity_Shannons_Avg<-Arthro_Diversity_Shannons %>% 
+  group_by(Treatment_Category) %>%
+  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
+  mutate(St_Error=std/sqrt(n)) %>% 
+  ungroup()
+
+#Plot
+ggplot(Arthro_Diversity_Shannons_Avg,aes(x=Mean, y=Treatment_Category)) +
+  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
+  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
+  geom_point(size=4) 
+
+#Model
+Arthro_Diversity_Shannons_glm <- glm(LnRR ~ Treatment_Category, data = Arthro_Diversity_Shannons)
+anova(Arthro_Diversity_Richness_glm) #can't run - only two studies
+
+#### Birds by Taxanomic and Data Unit ####
+#could not break down by taxanomic group
+
+### Bird Abundance (abundance (N detections))
+Bird_Abundance_NDetect<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="abundance")) %>%
+  filter(Data_Units=="abundance (N detections)") #only one data points - did not proceed
+
+### Bird Abundance (number of eggs per female")
+Bird_Abundance_Eggs<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="abundance")) %>%
+  filter(Data_Units=="number of eggs per female") #not enough data - only one fire type
+
+### Arthropod Abundance (number of young per successful nest)
+Bird_Abundance_Young<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="abundance")) %>%
+  filter(Data_Units!="number of young per successful nest") 
+
+Bird_Abundance_Young_Avg<-Bird_Abundance_Young %>% 
+  group_by(Treatment_Category) %>%
+  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
+  mutate(St_Error=std/sqrt(n)) %>% 
+  ungroup()
+
+#Plot
+ggplot(Bird_Abundance_Young_Avg,aes(x=Mean, y=Treatment_Category)) +
+  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
+  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
+  geom_point(size=4) 
+
+#Model
+Bird_Abundance_Young_glm <- glm(LnRR ~ Treatment_Category, data = Bird_Abundance_Young)
+anova(Bird_Abundance_Young_glm) 
 
 
-#takes effort so do later
-#Biomass
-Plant_Abundance_Biomass<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance" & Data_Units=="")) 
-unique(Plant_Abundance_Biomass$taxonomic_group) 
-#Percent Cover
-Plant_Abundance<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance")) 
-unique(Plant_Abundance$taxonomic_group)
+### Bird Diversity (richness)
+Bird_Diversity_Richness<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="diversity")) %>%
+  filter(Data_Units=="species richness (S)") #only one data point - did not proceed
 
-#Arthropod Abundance
-Arthropod_Abundance<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance")) 
-unique(Arthropod_Abundance$Data_Units) #separate out all categories (abundances together)
-unique(Arthropod_Abundance$taxonomic_group) #orders of arthropods and total
 
-#Arthropod Diversity
-Arthropod_Diversity<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity")) 
-unique(Arthropod_Diversity$Data_Units) #diversity and richness
+### Bird Diversity (shannon diversity)
+Bird_Diversity_ShannonD<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="diversity")) %>%
+  filter(Data_Units=="shannon diversity") #only one data point - did not proceed
 
-#Birds Abundance
-Birds_Abundance<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="abundance")) 
-unique(Birds_Abundance$Data_Units) #each seperately
-unique(Birds_Abundance$taxonomic_group) #seperate
 
-#Birds Diversity
-Birds_Diversity<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="diversity")) 
-unique(Birds_Diversity$Data_Units) #all three
-
-#Small Mammal Abundance
-SmallMammal_Abundance<-droplevels(subset(RR_Calc,ResponseVariable=="SmallMammal" & Data_Type=="abundance")) 
-unique(SmallMammal_Abundance$Data_Units) #don't seperate
-unique(SmallMammal_Abundance$taxonomic_group) #don't seperate
+### Bird Diversity (Shannon evenness)
+Bird_Diversity_ShannonE<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="diversity")) %>%
+  filter(Data_Units=="Shannon evenness") #only one data point - did not proceed
 
 
 #### Graphs ####
@@ -1129,6 +1327,7 @@ anova(Abundance_Arthropods_Glmm_nest)
 
 #Compare AIC Values
 AIC(Abundance_Arthropods_glm,Abundance_Arthropods_Glmm,Abundance_Arthropods_Glmm_nest) #Abundance_Arthropods_Glmm is the best but AIC is 152.7377 compared to glm which is 154.7938
+
 
 
 
