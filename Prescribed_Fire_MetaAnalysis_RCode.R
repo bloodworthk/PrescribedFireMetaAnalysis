@@ -743,8 +743,10 @@ ggplot()+
 library(lmerTest)
 #install.packages("multcomp")
 library(multcomp)
-install.packages("data.table")
+#install.packages("data.table")
 library(data.table)
+#install.packages("tidyverse")
+library(tidyverse)
 
 #### Read in Data ####
 
@@ -910,21 +912,10 @@ anova(Abundance_Arthropods_Glmm_nest)
 #Compare AIC Values
 AIC(Abundance_Arthropods_glm,Abundance_Arthropods_Glmm,Abundance_Arthropods_Glmm_nest) #Abundance_Arthropods_Glmm is the best but AIC is 152.7377 compared to glm which is 154.7938
 
-#### Plant Linear Regression Models ####
-
-RR_Plant_Abundance<-data.table(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
-linreg = function (formula) {
-  m=lm(formula)
-  list(slope=coefficients(m)[2], intercept=coefficients(m)[1], adj.r2=summary(m)$adj.r.squared, f=summary(m)$fstatistic[1],p.val=summary(m)$coefficients[2,4])
-}
-
-
-#Look at Diversity of Plants
-Diversity_Plants_regression <-  
 
 
 
-#### Graphs ####
+#### Graphs of RR by Response Variable ####
 
 #Make Dataframe for graphs 
 RR_Calc_Avg<-RR_Calc %>% 
@@ -932,7 +923,6 @@ RR_Calc_Avg<-RR_Calc %>%
   summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
   mutate(St_Error=std/sqrt(n)) %>% 
   ungroup()
-
 
 #Abundance
 ggplot(data=subset(RR_Calc_Avg,Data_Type=="abundance"),aes(x=Mean, y=Treatment_Category)) +
@@ -952,6 +942,7 @@ ggplot(data=subset(RR_Calc_Avg,Data_Type=="diversity"),aes(x=Mean, y=Treatment_C
 #save at 2000x1000
 
 
+
 #### Graphs ####
 #map of big data extraction data points so far
 ggplot()+
@@ -969,4 +960,52 @@ ggplot()+
   labs(fill="Response Variable") + #legend label
   theme(legend.position=c(0.15,0.2))  #legend position
 #export at 1500 x 1000
+
+
+
+#### Tried but decided not to do ####
+
+## Plant Linear Regression Models ##
+
+### not going to do these because there is not enough spread of the data across longitude to accurately compare
+
+#Create function for linear regression
+linreg = function (formula) {
+  m=lm(formula)
+  list(slope=coefficients(m)[2], intercept=coefficients(m)[1], adj.r2=summary(m)$adj.r.squared, f=summary(m)$fstatistic[1],p.val=summary(m)$coefficients[2,4])
+}
+
+#Look at abundance of Plants
+#create data table of plant abundance
+RR_Plant_Abundance<-data.table(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
+
+#linreg is x by y
+Abundance_Plants_regression <- RR_Plant_Abundance[,linreg(Longitude~LnRR),by=Treatment_Category]
+Abundance_Plants_regression #negative r2 means so much spread that there is no trend (could be noice)
+
+#Look at diversity of Plants
+#create data table of plant diversity
+RR_Plant_Diversity<-data.table(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
+
+#linreg is x by y
+Diversity_Plants_regression <- RR_Plant_Diversity[,linreg(Longitude~LnRR),by=Treatment_Category]
+Diversity_Plants_regression
+
+## Graphs of Regressions (by longitude) ##
+
+## Abundance 
+ggplot(data=subset(RR_Calc,Data_Type=="abundance"), aes(x=-Longitude,y=LnRR,fill=Treatment_Category,color=Treatment_Category))+
+  geom_jitter()+
+  facet_wrap(~ResponseVariable)
+#geom_smooth(data=subset(RR_Plant_Abundance,Treatment_Category=="2-4yr"),aes(x=-Longitude,y=LnRR,fill=Treatment_Category,color=Treatment_Category),method="lm",se=FALSE)
+
+## Diversity
+ggplot(data=subset(RR_Calc,Data_Type=="diversity"), aes(x=-Longitude,y=LnRR,fill=Treatment_Category,color=Treatment_Category))+
+  geom_jitter()+
+  facet_wrap(~ResponseVariable)
+
+##Plant Diversity
+ggplot(RR_Plant_Diversity, aes(x=-Longitude,y=LnRR,fill=Treatment_Category,color=Treatment_Category))+
+  geom_jitter()+
+  geom_smooth(data=subset(RR_Plant_Diversity,Treatment_Category=="2-4yr"),aes(x=-Longitude,y=LnRR,fill=Treatment_Category,color=Treatment_Category),method="lm",se=FALSE)
 
