@@ -881,7 +881,6 @@ ggplot(data=subset(RR_Calc_Avg,Data_Type=="abundance"),aes(x=Mean, y=Treatment_C
   facet_wrap(~ResponseVariable)
 #save at 2000x1000
 
-
 #Diversity
 ggplot(data=subset(RR_Calc_Avg,Data_Type=="diversity"),aes(x=Mean, y=Treatment_Category)) +
   geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
@@ -909,18 +908,70 @@ ggplot(Plant_Diversity_Avg,aes(x=Mean, y=Treatment_Category)) +
   geom_point(size=4) +
   facet_wrap(~taxonomic_group)
 
-#Abundance
-Plant_Abundance<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance")) %>% 
-  mutate(taxonomic_group=ifelse(taxonomic_group=="","Total",ifelse(taxonomic_group=="All","Total",taxonomic_group))) %>% 
-  filter(taxonomic_group!="native species" & taxonomic_group!="exotic species" & taxonomic_group!="native" & taxonomic_group!="exoitic" & taxonomic_group!="C4 grass" & taxonomic_group!="C3 grass")
+####Abundance (biomass)
+Plant_Abundance_Biomass<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance")) %>% 
+  #removing % biomass because it's not comparable with biomass
+  filter(Data_Units!="canopy cover (%)" & Data_Units!="cover" & Data_Units!="% cover" & Data_Units!="total cover (%)" & Data_Units!="biomass (%)" & Data_Units!="composition (%)" & Data_Units!="absolute species cover (%) " & Data_Units!="cover (%)" & Data_Units!="density (number of contracts with a vertical 4 mm-diameter rod)" & Data_Units!="canopy cover" & Data_Units!="average cover (0.1 m2)")
 
-Plant_Abundance_Avg<-Plant_Abundance %>% 
+Plant_Abundance_Biomass_Avg<-Plant_Abundance_Biomass %>% 
+  group_by(Treatment_Category) %>%
+  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
+  mutate(St_Error=std/sqrt(n)) %>% 
+  ungroup()
+
+ggplot(Plant_Abundance_Biomass_Avg,aes(x=Mean, y=Treatment_Category)) +
+  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
+  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
+  geom_point(size=4) 
+
+####Abundance (biomass*taxonomic group)
+Plant_Abundance_Biomass_Taxa<-Plant_Abundance_Biomass %>% 
+  #grouping all total biomass and woody and shrubs together 
+  mutate(taxonomic_group=ifelse(taxonomic_group=="","Total",ifelse(taxonomic_group=="grass ","grasses",ifelse(taxonomic_group=="grass biomass","grasses",ifelse(taxonomic_group=="forb biomass","forbs",ifelse(taxonomic_group=="forb","forbs",taxonomic_group)))))) %>% 
+  filter(taxonomic_group!="poa pratensis" & taxonomic_group!="schizachyrium scoparium" & taxonomic_group!="Lespedeza capitata")
+
+Plant_Abundance_Biomass_Taxa_Avg<-Plant_Abundance_Biomass_Taxa%>% 
   group_by(Treatment_Category, taxonomic_group) %>%
   summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
   mutate(St_Error=std/sqrt(n)) %>% 
   ungroup()
 
-ggplot(Plant_Abundance_Avg,aes(x=Mean, y=Treatment_Category)) +
+ggplot(Plant_Abundance_Biomass_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
+  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
+  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
+  geom_point(size=4) +
+  facet_wrap(~taxonomic_group)
+
+#### Abundance (cover)
+Plant_Abundance_Cover<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance")) %>% 
+  #removing % biomass because it's not comparable with biomass
+  filter(Data_Units!="total ANPP (g m-2)" & Data_Units!="biomass (g.m-2)" & Data_Units!="total plant biomass (g.m-2)" & Data_Units!="biomass (%)" & Data_Units!="total ANPP" & Data_Units!="biomass (g/m2)" & Data_Units!="ANPP (g m-2)" & Data_Units!="dry biomass (g/m2)" & Data_Units!="aboveground biomass (g/m2)" & Data_Units!="density (number of contracts with a vertical 4 mm-diameter rod)" & Data_Units!="aboveground NPP (gm-2)" & Data_Units!="residual biomass (g/m2) - average standing crop biomass (dry mass)")
+
+Plant_Abundance_Cover_Avg<-Plant_Abundance_Cover %>% 
+  group_by(Treatment_Category) %>%
+  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
+  mutate(St_Error=std/sqrt(n)) %>% 
+  ungroup()
+
+ggplot(Plant_Abundance_Cover_Avg,aes(x=Mean, y=Treatment_Category)) +
+  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
+  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
+  geom_point(size=4) 
+
+####Abundance (cover*taxonomic group)
+Plant_Abundance_Cover_Taxa<-Plant_Abundance_Cover %>% 
+#grouping all total biomass and woody and shrubs together 
+mutate(taxonomic_group=ifelse(taxonomic_group=="","Total",ifelse(taxonomic_group=="total live","Total",ifelse(taxonomic_group=="total cover","Total",ifelse(taxonomic_group=="forbes","forbs",ifelse(taxonomic_group=="forb","forbs",ifelse(taxonomic_group=="grass","grasses",ifelse(taxonomic_group=="woody plants","woody",ifelse(taxonomic_group=="shrubs","woody",ifelse(taxonomic_group=="shrub","woody",ifelse(taxonomic_group=="forb cover","forbs",taxonomic_group))))))))))) %>% 
+  filter(taxonomic_group!="introduced cool-season grass" & taxonomic_group!="Sorghastrum nutans" & taxonomic_group!="Andropogon gerardii" & taxonomic_group!="native species" & taxonomic_group!="exotic species" & taxonomic_group!="Tallgrasses" & taxonomic_group!="little blue stem" & taxonomic_group!="all other perennial grasses" & taxonomic_group!="annual grasses" & taxonomic_group!="legumes" & taxonomic_group!="native" & taxonomic_group!="exoitic" & taxonomic_group!="warm season grasses" & taxonomic_group!="native forbs" & taxonomic_group!="cool-seasoned grasses" & taxonomic_group!="exotic forbs" & taxonomic_group!="tallgrass" & taxonomic_group!="tallgrasses" & taxonomic_group!="little bluestem" & taxonomic_group!="other perennial grasses" & taxonomic_group!="sericea lespedeza" & taxonomic_group!="cool season grasses" & taxonomic_group!="native forb cover" & taxonomic_group!="exotic forb cover")
+  
+
+Plant_Abundance_Cover_Taxa_Avg<-Plant_Abundance_Cover_Taxa%>% 
+  group_by(Treatment_Category, taxonomic_group) %>%
+  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
+  mutate(St_Error=std/sqrt(n)) %>% 
+  ungroup()
+
+ggplot(Plant_Abundance_Cover_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
   geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
   geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
   geom_point(size=4) +
@@ -929,9 +980,6 @@ ggplot(Plant_Abundance_Avg,aes(x=Mean, y=Treatment_Category)) +
 
 ## Look at unique taxonomic groups for every response variable
 
-#Plant Abundance
-Plant_Abundance<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance")) 
-unique(Plant_Abundance$Data_Units) #separate models on biomass and % cover
 
 #takes effort so do later
 #Biomass
