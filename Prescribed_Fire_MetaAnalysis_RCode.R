@@ -741,6 +741,10 @@ ggplot()+
 #load packages
 
 library(lmerTest)
+#install.packages("multcomp")
+library(multcomp)
+install.packages("data.table")
+library(data.table)
 
 #### Read in Data ####
 
@@ -833,11 +837,16 @@ ggplot(RR_Calc, aes(x=LnRR, color=Treatment_Category,fill=Treatment_Category))+
 
 #### Statistical Models ####
 
-#### Plant Linear Models Models ####
+#### Plant Glm Models ####
+### Use basic glm for all analyses
 
-#Look at Diversity of Plants 
+RR_Calc$Treatment_Category=as.factor(RR_Calc$Treatment_Category)
+
+#Look at Diversity of Plants
 Diversity_Plants_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
 anova(Diversity_Plants_glm) 
+#post hoc test for lmer test
+summary(glht(Diversity_Plants_glm, linfct = mcp(Treatment_Category = "Tukey"), test = adjusted(type = "BH")))
 
 #with random effect of PDF_Study ID
 Diversity_Plants_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
@@ -867,7 +876,7 @@ anova(Abundance_Plants_Glmm_nest)
 #Compare AIC Values
 AIC(Abundance_Plants_glm,Abundance_Plants_Glmm,Abundance_Plants_Glmm_nest) #Abundance_Plants_Glmm is the best but AIC is 1513.589 compared to glm which is 1521.799
 
-#### Arthropod Linear Models Models ####
+#### Arthropod GLMs ####
 
 #Look at Diversity of Arthropods
 Diversity_Arthropods_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
@@ -901,6 +910,19 @@ anova(Abundance_Arthropods_Glmm_nest)
 #Compare AIC Values
 AIC(Abundance_Arthropods_glm,Abundance_Arthropods_Glmm,Abundance_Arthropods_Glmm_nest) #Abundance_Arthropods_Glmm is the best but AIC is 152.7377 compared to glm which is 154.7938
 
+#### Plant Linear Regression Models ####
+
+RR_Plant_Abundance<-data.table(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
+linreg = function (formula) {
+  m=lm(formula)
+  list(slope=coefficients(m)[2], intercept=coefficients(m)[1], adj.r2=summary(m)$adj.r.squared, f=summary(m)$fstatistic[1],p.val=summary(m)$coefficients[2,4])
+}
+
+
+#Look at Diversity of Plants
+Diversity_Plants_regression <-  
+
+
 
 #### Graphs ####
 
@@ -918,6 +940,7 @@ ggplot(data=subset(RR_Calc_Avg,Data_Type=="abundance"),aes(x=Mean, y=Treatment_C
   geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
   geom_point(size=4) +
   facet_wrap(~ResponseVariable)
+#save at 2000x1000
 
 
 #Diversity
@@ -926,8 +949,7 @@ ggplot(data=subset(RR_Calc_Avg,Data_Type=="diversity"),aes(x=Mean, y=Treatment_C
   geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
   geom_point(size=4) +
   facet_wrap(~ResponseVariable)
-
-
+#save at 2000x1000
 
 
 #### Graphs ####
