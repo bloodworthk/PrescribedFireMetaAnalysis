@@ -747,6 +747,9 @@ library(multcomp)
 library(data.table)
 #install.packages("tidyverse")
 library(tidyverse)
+#devtools::install_github("ricardo-bion/ggradar")
+library(ggradar)
+library(vegan) 
 
 #### Read in Data ####
 
@@ -1210,6 +1213,114 @@ Bird_Diversity_ShannonD<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Da
 Bird_Diversity_ShannonE<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="diversity")) %>%
   filter(Data_Units=="Shannon evenness") #only one data point - did not proceed
 
+#### NMDS ####
+
+#Create dataframe for NMDS 
+Wide_RR_Calc<-RR_Calc %>%
+  select(PDF_Study_ID,Study_Point,ResponseVariable,Data_Type,LnRR) %>% 
+  #Make a wide table using column correct order as overarching columns, fill with values from correct dry weight column, if there is no value for one cell, insert a zero
+  spread(key=ResponseVariable,value=LnRR, fill=NA)
+
+#separate out diversity and abundance
+Wide_RR_Calc_Diversity<-Wide_RR_Calc %>% 
+  filter(Data_Type=="diversity") %>% 
+  #remove rows that only contain na's
+  filter()
+             
+Wide_RR_Calc_Abundance<-Wide_RR_Calc %>% 
+  filter(Data_Type=="abundance")
+
+## Diversity
+BC_Data_Div <- metaMDS(Wide_RR_Calc_Diversity[,4:9],na.rm=TRUE)
+#look at species signiciance driving NMDS 
+intrinsics <- envfit(BC_Data_S, Wide_Order_Weight_S, permutations = 999)
+head(intrinsics)
+#Make a data frame called sites with 1 column and same number of rows that is in Wide Order weight
+sites <- 1:nrow(Wide_Order_Weight_S)
+#Make a new data table called BC_Meta_Data and use data from Wide_Relative_Cover columns 1-3
+BC_Meta_Data_S <- Wide_Order_Weight_S[,1:5] %>% 
+  mutate(Trt_Year=paste(Grazing_Treatment,Year,sep="."))
+#make a plot using the dataframe BC_Data and the column "points".  Make Grazing Treatment a factor - make the different grazing treatments different colors
+plot(BC_Data_S$points,col=as.factor(BC_Meta_Data_S$Trt_Year))
+#make elipses using the BC_Data.  Group by grazing treatment and use standard deviation to draw eclipses
+ordiellipse(BC_Data_S,groups = as.factor(BC_Meta_Data_S$Trt_Year),kind = "sd",display = "sites", label = T)
+
+#Use the vegan ellipse function to make ellipses           
+veganCovEllipse<-function (cov, center = c(0, 0), scale = 1, npoints = 100)
+{
+  theta <- (0:npoints) * 2 * pi/npoints
+  Circle <- cbind(cos(theta), sin(theta))
+  t(center + scale * t(Circle %*% chol(cov)))
+}
+#Make a data frame called BC_NMDS and at a column using the first set of "points" in BC_Data and a column using the second set of points.  Group them by watershed
+BC_NMDS_S = data.frame(MDS1 = BC_Data_S$points[,1], MDS2 = BC_Data_S$points[,2],group=BC_Meta_Data_S$Trt_Year)
+#Make data table called BC_NMDS_Graph and bind the BC_Meta_Data, and BC_NMDS data together
+BC_NMDS_Graph_S <- cbind(BC_Meta_Data_S,BC_NMDS_S)
+#Make a data table called BC_Ord_Ellipses using data from BC_Data and watershed information from BC_Meta_Data.  Display sites and find the standard error at a confidence iinterval of 0.95.  Place lables on the graph
+BC_Ord_Ellipses_S<-ordiellipse(BC_Data_S, BC_Meta_Data_S$Trt_Year, display = "sites",
+                               kind = "se", conf = 0.95, label = T)
+#Make a new empty data frame called BC_Ellipses                
+BC_Ellipses_S <- data.frame()
+#Generate ellipses points - switched levels for unique - not sure if it's stil correct but it looks right
+for(g in unique(BC_NMDS_S$group)){
+  BC_Ellipses_S <- rbind(BC_Ellipses_S, cbind(as.data.frame(with(BC_NMDS_S[BC_NMDS_S$group==g,],                                                  veganCovEllipse(BC_Ord_Ellipses_S[[g]]$cov,BC_Ord_Ellipses_S[[g]]$center,BC_Ord_Ellipses_S[[g]]$scale)))
+                                              ,group=g))
+}
+
+#Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
+NMDS_Sweep<-ggplot(data = BC_NMDS_Graph_S, aes(MDS1,MDS2, shape = group,color=group,linetype=group))+
+  #make a point graph where the points are size 5.  Color them based on exlosure
+  geom_point(size=8, stroke = 2) +
+  #Use the data from BC_Ellipses to make ellipses that are size 1 with a solid line
+  geom_path(data = BC_Ellipses_S, aes(x=NMDS1, y=NMDS2), size=4)+
+  #make shape, color, and linetype in one combined legend instead of three legends
+  labs(color  = "", linetype = "", shape = "")+
+  # make legend 2 columns
+  guides(shape=guide_legend(ncol=2),colour=guide_legend(ncol=2),linetype=guide_legend(ncol=2))+
+  #change order of legend
+  #Use different shapes 
+  scale_shape_manual(values=c(15,16,17,22,21,24),labels = c("Heavy 2020","Destock 2020", "No Grazing 2020","Heavy 2021","Destock 2021", "No Grazing 2021"), breaks = c("HG.2020","LG.2020","NG.2020","HG.2021","LG.2021","NG.2021"),name="")+
+  scale_color_manual(values=c("skyblue3","springgreen3","plum3","royalblue4","springgreen4","plum4"),labels = c("Heavy 2020","Destock 2020", "No Grazing 2020","Heavy 2021","Destock 2021", "No Grazing 2021"), breaks = c("HG.2020","LG.2020","NG.2020","HG.2021","LG.2021","NG.2021"),name="")+
+  scale_linetype_manual(values=c("solid","twodash","longdash","solid","twodash","longdash"),labels = c("Heavy 2020","Destock 2020", "No Grazing 2020","Heavy 2021","Destock 2021", "No Grazing 2021"), breaks = c("HG.2020","LG.2020","NG.2020","HG.2021","LG.2021","NG.2021"),name="")+
+  #make the text size of the legend titles 28
+  theme(legend.key = element_rect(size=3), legend.key.size = unit(1,"centimeters"),legend.position="NONE")+
+  #Label the x-axis "NMDS1" and the y-axis "NMDS2"
+  xlab("NMDS1")+
+  ylab("NMDS2")+
+  theme(text = element_text(size = 55),legend.text=element_text(size=40))+
+  annotate(geom="text", x=-1.5, y=0.8, label="Sweepnet",size=20)
+#export at 2000 x 1800
+
+
+
+#### Radar/Spider Graphs ####
+#trying to figure out
+
+### Plant Abundance with Taxanomic Group
+#make dataframe wide
+Plant_Abundance_Biomass_Spider<-Plant_Abundance_Biomass_Taxa %>% 
+  group_by(Treatment_Category,taxonomic_group) %>% 
+  mutate(Avg_LnRR=mean(LnRR)) %>% 
+  ungroup() %>% 
+  select(Treatment_Category,taxonomic_group,Avg_LnRR) %>% 
+  unique() %>% 
+#Make a wide table using column correct order as overarching columns, fill with values from correct dry weight column, if there is no value for one cell, insert a zero
+  spread(key=taxonomic_group,value=Avg_LnRR, fill=NA)
+
+#create the spider graph 
+ggradar(Plant_Abundance_Biomass_Spider,is_linear = function() TRUE)
+
+# Define a new coordinate system 
+coord_radar <- function(...) { 
+  structure(coord_polar(...), class = c("radar", "polar", "coord")) 
+} 
+is.linear.radar <- function(coord) TRUE 
+
+ggplot(Plant_Abundance_Biomass_Taxa_Avg, aes(x = Treatment_Category, y = Mean)) + 
+  geom_path(aes(group = taxonomic_group)) +
+  coord_radar() + facet_wrap(~ model,ncol=4) + 
+  theme(strip.text.x = element_text(size = rel(0.8)), 
+        axis.text.x = element_text(size = rel(0.8))) 
 
 #### Graphs ####
 #map of big data extraction data points so far
