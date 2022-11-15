@@ -826,7 +826,6 @@ RR_Calc<-RR_by_Hand %>%
   mutate(Study_Point_n=length(Study_Point)) %>% 
   ungroup()
 
-
 #### Visualize the data with Histograms ####
 #histogram of all data
 hist(RR_Calc$LnRR)
@@ -850,33 +849,10 @@ anova(Diversity_Plants_glm)
 #post hoc test for lmer test
 summary(glht(Diversity_Plants_glm, linfct = mcp(Treatment_Category = "Tukey"), test = adjusted(type = "BH")))
 
-#with random effect of PDF_Study ID
-Diversity_Plants_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
-anova(Diversity_Plants_Glmm)
-
-#with random effect of Study_Point_n nested in PDF_Study ID 
-Diversity_Plants_Glmm_nest <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID:Study_Point_n), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
-anova(Diversity_Plants_Glmm_nest)
-
-#Compare AIC Values
-AIC(Diversity_Plants_glm,Diversity_Plants_Glmm,Diversity_Plants_Glmm_nest) #Diversity_Plants_glm (simplest) is the best
-
-### 
-
 #Look at Abundance of Plants 
 Abundance_Plants_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
 anova(Abundance_Plants_glm) 
 
-#with random effect of PDF_Study ID
-Abundance_Plants_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
-anova(Abundance_Plants_Glmm)
-
-#with random effect of Study_Point_n nested in PDF_Study ID 
-Abundance_Plants_Glmm_nest <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID:Study_Point_n), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
-anova(Abundance_Plants_Glmm_nest)
-
-#Compare AIC Values
-AIC(Abundance_Plants_glm,Abundance_Plants_Glmm,Abundance_Plants_Glmm_nest) #Abundance_Plants_Glmm is the best but AIC is 1513.589 compared to glm which is 1521.799
 
 #### Arthropod GLMs ####
 
@@ -884,36 +860,9 @@ AIC(Abundance_Plants_glm,Abundance_Plants_Glmm,Abundance_Plants_Glmm_nest) #Abun
 Diversity_Arthropods_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
 anova(Diversity_Arthropods_glm) 
 
-#with random effect of PDF_Study ID
-Diversity_Arthropods_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
-anova(Diversity_Arthropods_Glmm)
-
-#with random effect of Study_Point_n nested in PDF_Study ID 
-Diversity_Arthropods_Glmm_nest <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID:Study_Point_n), data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
-anova(Diversity_Arthropods_Glmm_nest)
-
-#Compare AIC Values
-AIC(Diversity_Arthropods_glm,Diversity_Arthropods_Glmm,Diversity_Arthropods_Glmm_nest) #Diversity_Arthropods_GLmm is the best but AIC of Glmm is 51.02890 and AIC of glm= 54.09142
-
-### 
-
 #Look at Abundance of Arthropods 
 Abundance_Arthropods_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
 anova(Abundance_Arthropods_glm) 
-
-#with random effect of PDF_Study ID
-Abundance_Arthropods_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
-anova(Abundance_Arthropods_Glmm)
-
-#with random effect of Study_Point_n nested in PDF_Study ID 
-Abundance_Arthropods_Glmm_nest <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID:Study_Point_n), data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
-anova(Abundance_Arthropods_Glmm_nest)
-
-#Compare AIC Values
-AIC(Abundance_Arthropods_glm,Abundance_Arthropods_Glmm,Abundance_Arthropods_Glmm_nest) #Abundance_Arthropods_Glmm is the best but AIC is 152.7377 compared to glm which is 154.7938
-
-
-
 
 #### Graphs of RR by Response Variable ####
 
@@ -941,6 +890,79 @@ ggplot(data=subset(RR_Calc_Avg,Data_Type=="diversity"),aes(x=Mean, y=Treatment_C
   facet_wrap(~ResponseVariable)
 #save at 2000x1000
 
+#### Subsetting by Taxanomic Group ####
+
+#Diversity
+Plant_Diversity<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity")) %>% 
+  mutate(taxonomic_group=ifelse(taxonomic_group=="","Total",ifelse(taxonomic_group=="All","Total",taxonomic_group))) %>% 
+  filter(taxonomic_group!="native species" & taxonomic_group!="exotic species" & taxonomic_group!="native" & taxonomic_group!="exoitic" & taxonomic_group!="C4 grass" & taxonomic_group!="C3 grass")
+
+Plant_Diversity_Avg<-Plant_Diversity %>% 
+  group_by(Treatment_Category, taxonomic_group) %>%
+  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
+  mutate(St_Error=std/sqrt(n)) %>% 
+  ungroup()
+
+ggplot(Plant_Diversity_Avg,aes(x=Mean, y=Treatment_Category)) +
+  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
+  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
+  geom_point(size=4) +
+  facet_wrap(~taxonomic_group)
+
+#Abundance
+Plant_Abundance<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance")) %>% 
+  mutate(taxonomic_group=ifelse(taxonomic_group=="","Total",ifelse(taxonomic_group=="All","Total",taxonomic_group))) %>% 
+  filter(taxonomic_group!="native species" & taxonomic_group!="exotic species" & taxonomic_group!="native" & taxonomic_group!="exoitic" & taxonomic_group!="C4 grass" & taxonomic_group!="C3 grass")
+
+Plant_Abundance_Avg<-Plant_Abundance %>% 
+  group_by(Treatment_Category, taxonomic_group) %>%
+  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
+  mutate(St_Error=std/sqrt(n)) %>% 
+  ungroup()
+
+ggplot(Plant_Abundance_Avg,aes(x=Mean, y=Treatment_Category)) +
+  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
+  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
+  geom_point(size=4) +
+  facet_wrap(~taxonomic_group)
+
+
+## Look at unique taxonomic groups for every response variable
+
+#Plant Abundance
+Plant_Abundance<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance")) 
+unique(Plant_Abundance$Data_Units) #separate models on biomass and % cover
+
+#takes effort so do later
+#Biomass
+Plant_Abundance_Biomass<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance" & Data_Units=="")) 
+unique(Plant_Abundance_Biomass$taxonomic_group) 
+#Percent Cover
+Plant_Abundance<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance")) 
+unique(Plant_Abundance$taxonomic_group)
+
+#Arthropod Abundance
+Arthropod_Abundance<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance")) 
+unique(Arthropod_Abundance$Data_Units) #separate out all categories (abundances together)
+unique(Arthropod_Abundance$taxonomic_group) #orders of arthropods and total
+
+#Arthropod Diversity
+Arthropod_Diversity<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity")) 
+unique(Arthropod_Diversity$Data_Units) #diversity and richness
+
+#Birds Abundance
+Birds_Abundance<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="abundance")) 
+unique(Birds_Abundance$Data_Units) #each seperately
+unique(Birds_Abundance$taxonomic_group) #seperate
+
+#Birds Diversity
+Birds_Diversity<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="diversity")) 
+unique(Birds_Diversity$Data_Units) #all three
+
+#Small Mammal Abundance
+SmallMammal_Abundance<-droplevels(subset(RR_Calc,ResponseVariable=="SmallMammal" & Data_Type=="abundance")) 
+unique(SmallMammal_Abundance$Data_Units) #don't seperate
+unique(SmallMammal_Abundance$taxonomic_group) #don't seperate
 
 
 #### Graphs ####
@@ -1008,4 +1030,58 @@ ggplot(data=subset(RR_Calc,Data_Type=="diversity"), aes(x=-Longitude,y=LnRR,fill
 ggplot(RR_Plant_Diversity, aes(x=-Longitude,y=LnRR,fill=Treatment_Category,color=Treatment_Category))+
   geom_jitter()+
   geom_smooth(data=subset(RR_Plant_Diversity,Treatment_Category=="2-4yr"),aes(x=-Longitude,y=LnRR,fill=Treatment_Category,color=Treatment_Category),method="lm",se=FALSE)
+
+
+## GLM Model Options not used 
+
+#with random effect of PDF_Study ID
+Diversity_Plants_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
+anova(Diversity_Plants_Glmm)
+
+#with random effect of Study_Point_n nested in PDF_Study ID 
+Diversity_Plants_Glmm_nest <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID:Study_Point_n), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
+anova(Diversity_Plants_Glmm_nest)
+
+#Compare AIC Values
+AIC(Diversity_Plants_glm,Diversity_Plants_Glmm,Diversity_Plants_Glmm_nest) #Diversity_Plants_glm (simplest) is the best
+
+#plant abundance 
+#with random effect of PDF_Study ID
+Abundance_Plants_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
+anova(Abundance_Plants_Glmm)
+
+#with random effect of Study_Point_n nested in PDF_Study ID 
+Abundance_Plants_Glmm_nest <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID:Study_Point_n), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
+anova(Abundance_Plants_Glmm_nest)
+
+#Compare AIC Values
+AIC(Abundance_Plants_glm,Abundance_Plants_Glmm,Abundance_Plants_Glmm_nest) #Abundance_Plants_Glmm is the best but AIC is 1513.589 compared to glm which is 1521.799
+
+##Arthropod diversity 
+#with random effect of PDF_Study ID
+Diversity_Arthropods_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
+anova(Diversity_Arthropods_Glmm)
+
+#with random effect of Study_Point_n nested in PDF_Study ID 
+Diversity_Arthropods_Glmm_nest <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID:Study_Point_n), data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
+anova(Diversity_Arthropods_Glmm_nest)
+
+#Compare AIC Values
+AIC(Diversity_Arthropods_glm,Diversity_Arthropods_Glmm,Diversity_Arthropods_Glmm_nest) #Diversity_Arthropods_GLmm is the best but AIC of Glmm is 51.02890 and AIC of glm= 54.09142
+
+## Arthropod Abundance
+
+#with random effect of PDF_Study ID
+Abundance_Arthropods_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
+anova(Abundance_Arthropods_Glmm)
+
+#with random effect of Study_Point_n nested in PDF_Study ID 
+Abundance_Arthropods_Glmm_nest <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID:Study_Point_n), data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
+anova(Abundance_Arthropods_Glmm_nest)
+
+#Compare AIC Values
+AIC(Abundance_Arthropods_glm,Abundance_Arthropods_Glmm,Abundance_Arthropods_Glmm_nest) #Abundance_Arthropods_Glmm is the best but AIC is 152.7377 compared to glm which is 154.7938
+
+
+
 
