@@ -949,7 +949,7 @@ ggplot(Plant_Diversity_Avg,aes(x=Mean, y=Treatment_Category)) +
 #Model
 Plant_Diversity_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Diversity_Taxa)
 anova(Plant_Diversity_Taxa_glm,test="F")  #treatment category (p=0.008836), taxonomic group (p=0.790816), interaction (p=0.640497)
-summary(glht(Plant_Diversity_Taxa_glm, mcp(Treatment_Category = "Tukey"))) #get an error
+summary(glht(Plant_Diversity_Taxa_glm, mcp(Treatment_Category = "Tukey"))) #get an error - tried emmeans and get NAs
 
 ### Plant Abundance (biomass)
 Plant_Abundance_Biomass<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance")) %>% 
@@ -995,6 +995,8 @@ Plant_Abundance_Biomass_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_grou
 anova(Plant_Abundance_Biomass_Taxa_glm,test="F")  #treatment (0.5663), taxonomic group (0.03997)
 summary(glht(Plant_Abundance_Biomass_Taxa_glm, mcp(Treatment_Category = "Tukey"))) #error
 summary(glht(Plant_Abundance_Biomass_Taxa_glm, mcp(taxonomic_group = "Tukey"))) #error
+
+
 
 
 #### Plant Abundance (cover)
@@ -1230,21 +1232,43 @@ Bird_Diversity_ShannonE<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Da
 
 #Create dataframe for NMDS 
 Wide_RR_Calc<-RR_Calc %>%
-  select(PDF_Study_ID,Study_Point,ResponseVariable,Data_Type,LnRR) %>% 
+  #all data must be postivie for Bray Curtis dissimilarity -- so following this guide (http://strata.uga.edu/8370/lecturenotes/multidimensionalScaling.html) and adding a constant to each number so ratios are correct but no negative values exist -- there's a function on that website but I do not understand how it works and I get an error so for now I am  just adding 5 to everything (slight lower than the smallest number for the LnRR)
+  mutate(LnRR_5=LnRR+5) %>% 
+  #merge PDF Study ID and study point together
+  mutate(ID=paste(PDF_Study_ID,Study_Point,sep=".")) %>% 
+  select(ID,ResponseVariable,Data_Type,Treatment_Category, LnRR_5) %>% 
   #Make a wide table using column correct order as overarching columns, fill with values from correct dry weight column, if there is no value for one cell, insert a zero
-  spread(key=ResponseVariable,value=LnRR, fill=NA)
+  spread(key=ResponseVariable,value=LnRR_5, fill=0)
+  
 
 #separate out diversity and abundance
 Wide_RR_Calc_Diversity<-Wide_RR_Calc %>% 
   filter(Data_Type=="diversity") %>% 
-  #remove rows that only contain na's
-  filter()
+  select(-Data_Type)
              
 Wide_RR_Calc_Abundance<-Wide_RR_Calc %>% 
-  filter(Data_Type=="abundance")
+  filter(Data_Type=="abundance") %>% 
+  select(-Data_Type)
 
 ## Diversity
-BC_Data_Div <- metaMDS(Wide_RR_Calc_Diversity[,4:9],na.rm=TRUE)
+BC_Data_Div <- metaMDS(Wide_RR_Calc_Diversity[,3:8],na.rm=TRUE)
+#look at species signiciance driving NMDS 
+intrinsics <- envfit(BC_Data_Div, Wide_RR_Calc_Diversity, permutations = 999,na.rm = na.rm)
+head(intrinsics)
+#Make a data frame called sites with 1 column and same number of rows that is in Wide Order weight
+sites_civ <- 1:nrow(Wide_RR_Calc_Diversity)
+#Make a new data table called BC_Meta_Data and use data from Wide_Relative_Cover columns 1-3
+BC_Meta_Data_Div <- Wide_RR_Calc_Diversity[,1:3] %>% 
+  mutate(Trt_Year=paste(Grazing_Treatment,Year,sep="."))
+#make a plot using the dataframe BC_Data and the column "points".  Make Grazing Treatment a factor - make the different grazing treatments different colors
+plot(BC_Data_S$points,col=as.factor(BC_Meta_Data_S$Trt_Year))
+#make elipses using the BC_Data.  Group by grazing treatment and use standard deviation to draw eclipses
+ordiellipse(BC_Data_S,groups = as.factor(BC_Meta_Data_S$Trt_Year),kind = "sd",display = "sites", label = T)
+
+
+
+#sweepnet
+BC_Data_S <- metaMDS(Wide_Order_Weight_S[,6:13])
 #look at species signiciance driving NMDS 
 intrinsics <- envfit(BC_Data_S, Wide_Order_Weight_S, permutations = 999)
 head(intrinsics)
