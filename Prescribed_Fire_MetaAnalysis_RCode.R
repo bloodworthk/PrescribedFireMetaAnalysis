@@ -847,7 +847,7 @@ RR_Calc$Treatment_Category=as.factor(RR_Calc$Treatment_Category)
 
 #Look at Diversity of Plants
 Diversity_Plants_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
-anova(Diversity_Plants_glm) 
+summary(Diversity_Plants_glm) 
 #post hoc test for lmer test
 summary(glht(Diversity_Plants_glm, linfct = mcp(Treatment_Category = "Tukey"), test = adjusted(type = "BH")))
 
@@ -860,7 +860,8 @@ anova(Abundance_Plants_glm)
 
 #Look at Diversity of Arthropods
 Diversity_Arthropods_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
-anova(Diversity_Arthropods_glm) 
+#Running a summary on the glm to see p-values
+summary(Diversity_Arthropods_glm)
 
 #Look at Abundance of Arthropods 
 Abundance_Arthropods_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
@@ -1228,7 +1229,7 @@ Wide_RR_Calc_Diversity<-Wide_RR_Calc %>%
   filter()
              
 Wide_RR_Calc_Abundance<-Wide_RR_Calc %>% 
-  filter(Data_Type=="abundance")
+  filter(Data_Type=="abundance)
 
 ## Diversity
 BC_Data_Div <- metaMDS(Wide_RR_Calc_Diversity[,4:9],na.rm=TRUE)
