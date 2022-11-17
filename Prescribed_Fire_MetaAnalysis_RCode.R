@@ -847,25 +847,27 @@ RR_Calc$Treatment_Category=as.factor(RR_Calc$Treatment_Category)
 
 #Look at Diversity of Plants
 Diversity_Plants_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
-summary(Diversity_Plants_glm) 
+summary(Diversity_Plants_glm)
+#is the F test correct? used for "for those with dispersion estimated by moments (e.g., gaussian, quasibinomial and quasipoisson fits) the F test is most appropriate"
+anova(Diversity_Plants_glm,test="F") #p=0.002252
 #post hoc test for lmer test
-summary(glht(Diversity_Plants_glm, linfct = mcp(Treatment_Category = "Tukey"), test = adjusted(type = "BH")))
+summary(glht(Diversity_Plants_glm, mcp(Treatment_Category = "Tukey"))) #2-4 yr - 1 yr (p=0.65900), fire/grazing - 1 yr (p=0.00123), fire/grazing - 2-4 yr(p=0.12137)
 
 #Look at Abundance of Plants 
 Abundance_Plants_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
-anova(Abundance_Plants_glm) 
-
+anova(Abundance_Plants_glm,test="F")  #p=0.03373
+summary(glht(Abundance_Plants_glm, mcp(Treatment_Category = "Tukey"))) #2-4 yr - 1 yr (p=0.0266), fire/grazing - 1 yr (p=8832), fire/grazing - 2-4 yr(p=0.3471)
 
 #### Arthropod GLMs ####
 
 #Look at Diversity of Arthropods
 Diversity_Arthropods_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
-#Running a summary on the glm to see p-values
-summary(Diversity_Arthropods_glm)
+anova(Diversity_Arthropods_glm,test="F")  #p=0.06022
 
 #Look at Abundance of Arthropods 
 Abundance_Arthropods_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
-anova(Abundance_Arthropods_glm) 
+anova(Abundance_Arthropods_glm,test="F")  #p=0.5067
+
 
 #### Birds GLMs ####
 
@@ -874,26 +876,27 @@ Diversity_Birds_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,Resp
 
 #Look at Abundance of Birds
 Abundance_Birds_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="abundance"))
-anova(Abundance_Birds_glm) 
+anova(Abundance_Birds_glm,test="F")  #p=0.3539
 
 #### Small Mammals GLMs ####
 #no data for diversity
 
 #Look at Abundance of Small Mammals
 Abundance_SmallMammals_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="SmallMammal" & Data_Type=="abundance"))
-anova(Abundance_SmallMammals_glm) 
+anova(Abundance_SmallMammals_glm,test="F")  #p=0.8617
+
 
 #### Total Soil Carbon GLMs ####
 
 #Look at Abundance of Total Soil Carbon
 Abundance_TSC_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="TotalSoilCarbon" & Data_Type=="abundance"))
-anova(Abundance_TSC_glm)
+anova(Abundance_TSC_glm,test="F")  #p=0.3407
 
 #### Total Soil Nitrogen GLMs ####
 
 #Look at Abundance of Total Soil Nitrogen
 Abundance_TSN_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="TotalSoilNitrogen" & Data_Type=="abundance"))
-anova(Abundance_TSN_glm)
+anova(Abundance_TSN_glm,test="F")  #p=0.1744
 
 
 #### Graphs of RR by Response Variable ####
@@ -945,7 +948,8 @@ ggplot(Plant_Diversity_Avg,aes(x=Mean, y=Treatment_Category)) +
 
 #Model
 Plant_Diversity_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Diversity_Taxa)
-anova(Plant_Diversity_Taxa_glm) 
+anova(Plant_Diversity_Taxa_glm,test="F")  #treatment category (p=0.008836), taxonomic group (p=0.790816), interaction (p=0.640497)
+summary(glht(Plant_Diversity_Taxa_glm, mcp(Treatment_Category = "Tukey"))) #get an error
 
 ### Plant Abundance (biomass)
 Plant_Abundance_Biomass<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance")) %>% 
@@ -965,7 +969,7 @@ ggplot(Plant_Abundance_Biomass_Avg,aes(x=Mean, y=Treatment_Category)) +
 
 #Model
 Plant_Abundance_Biomass_glm <- glm(LnRR ~ Treatment_Category, data = Plant_Abundance_Biomass)
-anova(Plant_Abundance_Biomass_glm) 
+anova(Plant_Abundance_Biomass_glm,test="F")  #p=0.07584
 
 ### Plant Abundance (biomass*taxonomic group)
 Plant_Abundance_Biomass_Taxa<-Plant_Abundance_Biomass %>% 
@@ -988,7 +992,9 @@ ggplot(Plant_Abundance_Biomass_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
 
 #Model
 Plant_Abundance_Biomass_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Abundance_Biomass_Taxa)
-anova(Plant_Abundance_Biomass_Taxa_glm) 
+anova(Plant_Abundance_Biomass_Taxa_glm,test="F")  #treatment (0.5663), taxonomic group (0.03997)
+summary(glht(Plant_Abundance_Biomass_Taxa_glm, mcp(Treatment_Category = "Tukey"))) #error
+summary(glht(Plant_Abundance_Biomass_Taxa_glm, mcp(taxonomic_group = "Tukey"))) #error
 
 
 #### Plant Abundance (cover)
@@ -1010,7 +1016,8 @@ ggplot(Plant_Abundance_Cover_Avg,aes(x=Mean, y=Treatment_Category)) +
 
 #Model
 Plant_Abundance_Cover_glm <- glm(LnRR ~ Treatment_Category, data = Plant_Abundance_Cover)
-anova(Plant_Abundance_Cover_glm)
+anova(Plant_Abundance_Cover_glm,test="F")  #0.03613
+summary(glht(Plant_Abundance_Cover_glm, mcp(Treatment_Category = "Tukey"))) #2-4 yr - 1 yr (p=0.0257), fire/grazing - 1 yr (p=0.8447), fire/grazing - 2-4 yr(p=0.1182)
 
 ####Abundance (cover*taxonomic group)
 Plant_Abundance_Cover_Taxa<-Plant_Abundance_Cover %>% 
@@ -1034,7 +1041,11 @@ ggplot(Plant_Abundance_Cover_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
 
 #Model
 Plant_Abundance_Cover_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Abundance_Cover_Taxa)
-anova(Plant_Abundance_Cover_Taxa_glm)
+anova(Plant_Abundance_Cover_Taxa_glm,test="F")  #treatment (p=0.0044498), taxonomic group (p=0.0005604), interaction(p=0.0299557)
+summary(glht(Plant_Abundance_Cover_Taxa_glm, mcp(Treatment_Category = "Tukey"))) #error
+summary(glht(Plant_Abundance_Cover_Taxa_glm, mcp(taxonomic_group = "Tukey"))) #error
+#need to make column with taxa and treatment in it
+summary(glht(Plant_Abundance_Cover_Taxa_glm, mcp( = "Tukey"))) #2-4 yr - 1 yr (p=0.0266), fire/grazing - 1 yr (p=8832), fire/grazing - 2-4 yr(p=0.3471)
 
 #### Arthropods by Taxanomic and Data Unit ####
 
@@ -1064,7 +1075,7 @@ ggplot(Arthro_Abundance_Biomass_Avg,aes(x=Mean, y=Treatment_Category)) +
 
 #Model
 Arthro_Abundance_Biomass_glm <- glm(LnRR ~ Treatment_Category, data = Arthro_Abundance_Biomass)
-anova(Arthro_Abundance_Biomass_glm) 
+anova(Arthro_Abundance_Biomass_glm,test="F")  #p=0.2495
 
 ### Arthropod Abundance (Biomass*orders)
 Arthro_Abundance_Biomass_Taxa<-Arthro_Abundance_Biomass %>%
@@ -1086,7 +1097,7 @@ ggplot(Arthro_Abundance_Biomass_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
 
 #Model
 Arthro_Abundance_Biomass_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Arthro_Abundance_Biomass_Taxa)
-anova(Arthro_Abundance_Biomass_Taxa_glm) 
+anova(Arthro_Abundance_Biomass_Taxa_glm,test="F")  #treatment (0.3114), taxonomic group (p=0.7664), interaction (0.5317)
 
 ### Arthropod Abundance (relative Abundance)
 Arthro_Abundance_RelAbund<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance")) %>%
@@ -1106,7 +1117,8 @@ ggplot(Arthro_Abundance_RelAbund_Avg,aes(x=Mean, y=Treatment_Category)) +
 
 #Model
 Arthro_Abundance_RelAbund_glm <- glm(LnRR ~ Treatment_Category, data = Arthro_Abundance_RelAbund)
-anova(Arthro_Abundance_RelAbund_glm)
+anova(Arthro_Abundance_RelAbund_glm,test="F")  #p=0.9536
+
 
 ### Arthropod Abundance (relative abundance*grassfeeders vs forb/mixed feeders)
 #can use above dataframe because there is no other taxonomic groups
@@ -1125,8 +1137,8 @@ ggplot(Arthro_Abundance_RelAbund_Avg_Taxa,aes(x=Mean, y=Treatment_Category)) +
   facet_wrap(~taxonomic_group)
 
 #Model
-Arthro_Abundance_RelAbund_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data =Arthro_Abundance_RelAbund)
-anova(Arthro_Abundance_RelAbund_glm) 
+Arthro_Abundance_RelAbund_taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data =Arthro_Abundance_RelAbund)
+anova(Arthro_Abundance_RelAbund_taxa_glm,test="F")  #treatment (0.9416), taxonomic group (p=0.1744), interaction (0.4508)
 
 ### Arthropod Diversity (richness)
 Arthro_Diversity_Richness<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity")) %>%
@@ -1146,7 +1158,7 @@ ggplot(Arthro_Diversity_Richness_Avg,aes(x=Mean, y=Treatment_Category)) +
 
 #Model
 Arthro_Diversity_Richness_glm <- glm(LnRR ~ Treatment_Category, data = Arthro_Diversity_Richness)
-anova(Arthro_Diversity_Richness_glm) 
+anova(Arthro_Diversity_Richness_glm,test="F")  #0.2634
 
 ### Arthropod Diversity (shannon's)
 Arthro_Diversity_Shannons<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity")) %>%
@@ -1166,7 +1178,7 @@ ggplot(Arthro_Diversity_Shannons_Avg,aes(x=Mean, y=Treatment_Category)) +
 
 #Model
 Arthro_Diversity_Shannons_glm <- glm(LnRR ~ Treatment_Category, data = Arthro_Diversity_Shannons)
-anova(Arthro_Diversity_Richness_glm) #can't run - only two studies
+anova(Arthro_Diversity_Richness_glm,test="F")  #can't run - only two studies
 
 #### Birds by Taxanomic and Data Unit ####
 #could not break down by taxanomic group
@@ -1197,7 +1209,7 @@ ggplot(Bird_Abundance_Young_Avg,aes(x=Mean, y=Treatment_Category)) +
 
 #Model
 Bird_Abundance_Young_glm <- glm(LnRR ~ Treatment_Category, data = Bird_Abundance_Young)
-anova(Bird_Abundance_Young_glm) 
+anova(Bird_Abundance_Young_glm,test="F")  #0.6143
 
 
 ### Bird Diversity (richness)
@@ -1229,7 +1241,7 @@ Wide_RR_Calc_Diversity<-Wide_RR_Calc %>%
   filter()
              
 Wide_RR_Calc_Abundance<-Wide_RR_Calc %>% 
-  filter(Data_Type=="abundance)
+  filter(Data_Type=="abundance")
 
 ## Diversity
 BC_Data_Div <- metaMDS(Wide_RR_Calc_Diversity[,4:9],na.rm=TRUE)
@@ -1334,7 +1346,7 @@ ggplot()+
   geom_count(data=Data_extraction, mapping=aes(x=Longitude,y=Latitude,fill=PDF_Study_ID)) +  #this is the dataframe of lat/long, and the points are being colored by num_codominants, with the point shape and size specified at the end fill=response variable
   scale_size_area()+
   scale_colour_manual(values=GeneralGrantpal)+
-  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
+  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black"),legend.position="none") + #formatting the text
   ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
   xlab(expression("Longitude "*degree*"")) +
   labs(fill="Response Variable") + #legend label
