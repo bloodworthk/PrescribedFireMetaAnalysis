@@ -753,6 +753,9 @@ library(vegan)
 
 #### Read in Data ####
 
+#Bloodworth - Mac
+setwd("~/Library/CloudStorage/Box-Box/TNC_TGP_RxFire/Data")
+
 #read in dataframe with data from main extraction
 Data_extraction<-read.csv("Data Extraction/PrescribedFire_DataExtraction_Main.csv")
 
@@ -847,16 +850,15 @@ RR_Calc$Treatment_Category=as.factor(RR_Calc$Treatment_Category)
 
 #Look at Diversity of Plants
 Diversity_Plants_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
-summary(Diversity_Plants_glm)
 #is the F test correct? used for "for those with dispersion estimated by moments (e.g., gaussian, quasibinomial and quasipoisson fits) the F test is most appropriate"
 anova(Diversity_Plants_glm,test="F") #p=0.002252
 #post hoc test for lmer test
-summary(glht(Diversity_Plants_glm, mcp(Treatment_Category = "Tukey"))) #2-4 yr - 1 yr (p=0.65900), fire/grazing - 1 yr (p=0.00123), fire/grazing - 2-4 yr(p=0.12137)
+summary(glht(Diversity_Plants_glm, mcp(Treatment_Category = "Tukey"))) #2-4 yr - 1 yr (p=0.65899), fire/grazing - 1 yr (p=0.00123), fire/grazing - 2-4 yr(p=0.12137)
 
 #Look at Abundance of Plants 
 Abundance_Plants_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
 anova(Abundance_Plants_glm,test="F")  #p=0.03373
-summary(glht(Abundance_Plants_glm, mcp(Treatment_Category = "Tukey"))) #2-4 yr - 1 yr (p=0.0266), fire/grazing - 1 yr (p=8832), fire/grazing - 2-4 yr(p=0.3471)
+summary(glht(Abundance_Plants_glm, mcp(Treatment_Category = "Tukey"))) #2-4 yr - 1 yr (p=0.0267), fire/grazing - 1 yr (p=0.8832), fire/grazing - 2-4 yr(p=0.3471)
 
 #### Arthropod GLMs ####
 
@@ -992,7 +994,7 @@ ggplot(Plant_Abundance_Biomass_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
 
 #Model
 Plant_Abundance_Biomass_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Abundance_Biomass_Taxa)
-anova(Plant_Abundance_Biomass_Taxa_glm,test="F")  #treatment (0.5663), taxonomic group (0.03997)
+anova(Plant_Abundance_Biomass_Taxa_glm,test="F")  #treatment (0.05773), taxonomic group (0.03997)
 summary(glht(Plant_Abundance_Biomass_Taxa_glm, mcp(Treatment_Category = "Tukey"))) #error
 summary(glht(Plant_Abundance_Biomass_Taxa_glm, mcp(taxonomic_group = "Tukey"))) #error
 
