@@ -756,6 +756,9 @@ library(vegan)
 #Bloodworth - Mac
 setwd("~/Library/CloudStorage/Box-Box/TNC_TGP_RxFire/Data")
 
+#Bloodworth - PC
+setwd("/Users/kjbloodw/Box/TNC_TGP_RxFire/Data")
+
 #read in dataframe with data from main extraction
 Data_extraction<-read.csv("Data Extraction/PrescribedFire_DataExtraction_Main.csv")
 
@@ -865,6 +868,7 @@ summary(glht(Abundance_Plants_glm, mcp(Treatment_Category = "Tukey"))) #2-4 yr -
 #Look at Diversity of Arthropods
 Diversity_Arthropods_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
 anova(Diversity_Arthropods_glm,test="F")  #p=0.06022
+summary(glht(Diversity_Arthropods_glm, mcp(Treatment_Category = "Tukey"))) #2-4 yr - 1 yr (p=0.3461), fire/grazing - 1 yr (p=0.0191), fire/grazing - 2-4 yr(p=0.2634)
 
 #Look at Abundance of Arthropods 
 Abundance_Arthropods_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
@@ -935,7 +939,7 @@ Plant_Diversity_Taxa<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data
   mutate(taxonomic_group=ifelse(taxonomic_group=="","Total",ifelse(taxonomic_group=="All","Total",taxonomic_group))) %>% 
   filter(taxonomic_group!="native species" & taxonomic_group!="exotic species" & taxonomic_group!="native" & taxonomic_group!="exoitic" & taxonomic_group!="C4 grass" & taxonomic_group!="C3 grass")
 
-Plant_Diversity_Avg<-Plant_Diversity %>% 
+Plant_Diversity_Avg<-Plant_Diversity_Taxa %>% 
   group_by(Treatment_Category, taxonomic_group) %>%
   summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
   mutate(St_Error=std/sqrt(n)) %>% 
@@ -951,7 +955,11 @@ ggplot(Plant_Diversity_Avg,aes(x=Mean, y=Treatment_Category)) +
 #Model
 Plant_Diversity_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Diversity_Taxa)
 anova(Plant_Diversity_Taxa_glm,test="F")  #treatment category (p=0.008836), taxonomic group (p=0.790816), interaction (p=0.640497)
-summary(glht(Plant_Diversity_Taxa_glm, mcp(Treatment_Category = "Tukey"))) #get an error - tried emmeans and get NAs
+
+#posthoc test --- ran seperate model 
+Plant_Diversity_Taxa_glm_post <- glm(LnRR ~ Treatment_Category, data = Plant_Diversity_Taxa)
+anova(Plant_Diversity_Taxa_glm_,test="F")  #treatment category (p=0.008836), taxonomic group (p=0.790816), interaction (p=0.640497)
+summary(glht(Plant_Diversity_Taxa_glm_, mcp(Treatment_Category = "Tukey"))) 
 
 ### Plant Abundance (biomass)
 Plant_Abundance_Biomass<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance")) %>% 
@@ -972,18 +980,23 @@ ggplot(Plant_Abundance_Biomass_Avg,aes(x=Mean, y=Treatment_Category)) +
 #Model
 Plant_Abundance_Biomass_glm <- glm(LnRR ~ Treatment_Category, data = Plant_Abundance_Biomass)
 anova(Plant_Abundance_Biomass_glm,test="F")  #p=0.07584
+summary(glht(Plant_Abundance_Biomass_glm, mcp(Treatment_Category = "Tukey"))) #get an error - tried emmeans and get NAs
 
 ### Plant Abundance (biomass*taxonomic group)
 Plant_Abundance_Biomass_Taxa<-Plant_Abundance_Biomass %>% 
   #grouping all total biomass and woody and shrubs together 
   mutate(taxonomic_group=ifelse(taxonomic_group=="","Total",ifelse(taxonomic_group=="grass ","grasses",ifelse(taxonomic_group=="grass biomass","grasses",ifelse(taxonomic_group=="forb biomass","forbs",ifelse(taxonomic_group=="forb","forbs",taxonomic_group)))))) %>% 
   filter(taxonomic_group!="poa pratensis" & taxonomic_group!="schizachyrium scoparium" & taxonomic_group!="Lespedeza capitata")
+Plant_Abundance_Biomass_Taxa$taxonomic_group<-as.factor(Plant_Abundance_Biomass_Taxa$taxonomic_group)
+
 
 Plant_Abundance_Biomass_Taxa_Avg<-Plant_Abundance_Biomass_Taxa%>% 
   group_by(Treatment_Category, taxonomic_group) %>%
   summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
   mutate(St_Error=std/sqrt(n)) %>% 
   ungroup()
+
+
 
 #Graph
 ggplot(Plant_Abundance_Biomass_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
@@ -995,8 +1008,16 @@ ggplot(Plant_Abundance_Biomass_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
 #Model
 Plant_Abundance_Biomass_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Abundance_Biomass_Taxa)
 anova(Plant_Abundance_Biomass_Taxa_glm,test="F")  #treatment (0.05773), taxonomic group (0.03997)
-summary(glht(Plant_Abundance_Biomass_Taxa_glm, mcp(Treatment_Category = "Tukey"))) #error
-summary(glht(Plant_Abundance_Biomass_Taxa_glm, mcp(taxonomic_group = "Tukey"))) #error
+
+#post hoc for treatment
+Plant_Abundance_Biomass_Taxa_glm_trt <- glm(LnRR ~ Treatment_Category, data = Plant_Abundance_Biomass_Taxa)
+anova(Plant_Abundance_Biomass_Taxa_glm_trt,test="F") 
+summary(glht(Plant_Abundance_Biomass_Taxa_glm_trt, mcp(Treatment_Category = "Tukey"))) 
+
+#post hoc for taxonomic group
+Plant_Abundance_Biomass_Taxa_glm_tax <- glm(LnRR ~ taxonomic_group, data = Plant_Abundance_Biomass_Taxa)
+anova(Plant_Abundance_Biomass_Taxa_glm_tax,test="F") 
+summary(glht(Plant_Abundance_Biomass_Taxa_glm_tax, mcp(taxonomic_group = "Tukey"))) 
 
 
 
@@ -1027,7 +1048,11 @@ summary(glht(Plant_Abundance_Cover_glm, mcp(Treatment_Category = "Tukey"))) #2-4
 Plant_Abundance_Cover_Taxa<-Plant_Abundance_Cover %>% 
 #grouping all total biomass and woody and shrubs together 
 mutate(taxonomic_group=ifelse(taxonomic_group=="","Total",ifelse(taxonomic_group=="total live","Total",ifelse(taxonomic_group=="total cover","Total",ifelse(taxonomic_group=="forbes","forbs",ifelse(taxonomic_group=="forb","forbs",ifelse(taxonomic_group=="grass","grasses",ifelse(taxonomic_group=="woody plants","woody",ifelse(taxonomic_group=="shrubs","woody",ifelse(taxonomic_group=="shrub","woody",ifelse(taxonomic_group=="forb cover","forbs",taxonomic_group))))))))))) %>% 
-  filter(taxonomic_group!="introduced cool-season grass" & taxonomic_group!="Sorghastrum nutans" & taxonomic_group!="Andropogon gerardii" & taxonomic_group!="native species" & taxonomic_group!="exotic species" & taxonomic_group!="Tallgrasses" & taxonomic_group!="little blue stem" & taxonomic_group!="all other perennial grasses" & taxonomic_group!="annual grasses" & taxonomic_group!="legumes" & taxonomic_group!="native" & taxonomic_group!="exoitic" & taxonomic_group!="warm season grasses" & taxonomic_group!="native forbs" & taxonomic_group!="cool-seasoned grasses" & taxonomic_group!="exotic forbs" & taxonomic_group!="tallgrass" & taxonomic_group!="tallgrasses" & taxonomic_group!="little bluestem" & taxonomic_group!="other perennial grasses" & taxonomic_group!="sericea lespedeza" & taxonomic_group!="cool season grasses" & taxonomic_group!="native forb cover" & taxonomic_group!="exotic forb cover")
+  filter(taxonomic_group!="introduced cool-season grass" & taxonomic_group!="Sorghastrum nutans" & taxonomic_group!="Andropogon gerardii" & taxonomic_group!="native species" & taxonomic_group!="exotic species" & taxonomic_group!="Tallgrasses" & taxonomic_group!="little blue stem" & taxonomic_group!="all other perennial grasses" & taxonomic_group!="annual grasses" & taxonomic_group!="legumes" & taxonomic_group!="native" & taxonomic_group!="exoitic" & taxonomic_group!="warm season grasses" & taxonomic_group!="native forbs" & taxonomic_group!="cool-seasoned grasses" & taxonomic_group!="exotic forbs" & taxonomic_group!="tallgrass" & taxonomic_group!="tallgrasses" & taxonomic_group!="little bluestem" & taxonomic_group!="other perennial grasses" & taxonomic_group!="sericea lespedeza" & taxonomic_group!="cool season grasses" & taxonomic_group!="native forb cover" & taxonomic_group!="exotic forb cover") %>% 
+  mutate(Taxa_Trt=paste(taxonomic_group,Treatment_Category,sep="_"))
+
+Plant_Abundance_Cover_Taxa$taxonomic_group<-as.factor(Plant_Abundance_Cover_Taxa$taxonomic_group)
+Plant_Abundance_Cover_Taxa$Taxa_Trt<-as.factor(Plant_Abundance_Cover_Taxa$Taxa_Trt)
   
 
 Plant_Abundance_Cover_Taxa_Avg<-Plant_Abundance_Cover_Taxa%>% 
@@ -1046,8 +1071,24 @@ ggplot(Plant_Abundance_Cover_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
 #Model
 Plant_Abundance_Cover_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Abundance_Cover_Taxa)
 anova(Plant_Abundance_Cover_Taxa_glm,test="F")  #treatment (p=0.0044498), taxonomic group (p=0.0005604), interaction(p=0.0299557)
-summary(glht(Plant_Abundance_Cover_Taxa_glm, mcp(Treatment_Category = "Tukey"))) #error
-summary(glht(Plant_Abundance_Cover_Taxa_glm, mcp(taxonomic_group = "Tukey"))) #error
+
+#post hoc for treatment
+Plant_Abundance_Cover_Taxa_glm_trt <- glm(LnRR ~ Treatment_Category, data = Plant_Abundance_Cover_Taxa)
+anova(Plant_Abundance_Cover_Taxa_glm_trt,test="F")  
+summary(glht(Plant_Abundance_Cover_Taxa_glm_trt, mcp(Treatment_Category = "Tukey"))) 
+
+#post hoc for taxa
+Plant_Abundance_Cover_Taxa_glm_tax <- glm(LnRR ~ taxonomic_group, data = Plant_Abundance_Cover_Taxa)
+anova(Plant_Abundance_Cover_Taxa_glm_tax,test="F")  
+summary(glht(Plant_Abundance_Cover_Taxa_glm_tax, mcp(taxonomic_group = "Tukey"))) 
+
+#post hoc for taxa*treatment
+Plant_Abundance_Cover_Taxa_glm_Int <- glm(LnRR ~ Taxa_Trt, data = Plant_Abundance_Cover_Taxa)
+anova(Plant_Abundance_Cover_Taxa_glm_Int,test="F") 
+summary(glht(Plant_Abundance_Cover_Taxa_glm_Int, mcp(Taxa_Trt = "Tukey")))
+
+
+
 #need to make column with taxa and treatment in it
 summary(glht(Plant_Abundance_Cover_Taxa_glm, mcp(Treatment_Category = "Tukey"))) #2-4 yr - 1 yr (p=0.0266), fire/grazing - 1 yr (p=8832), fire/grazing - 2-4 yr(p=0.3471)
 
@@ -1181,8 +1222,7 @@ ggplot(Arthro_Diversity_Shannons_Avg,aes(x=Mean, y=Treatment_Category)) +
   geom_point(size=4) 
 
 #Model
-Arthro_Diversity_Shannons_glm <- glm(LnRR ~ Treatment_Category, data = Arthro_Diversity_Shannons)
-anova(Arthro_Diversity_Richness_glm,test="F")  #can't run - only two studies
+Arthro_Diversity_Shannons_glm <- glm(LnRR ~ Treatment_Category, data = Arthro_Diversity_Shannons) #can't run - only two studies
 
 #### Birds by Taxanomic and Data Unit ####
 #could not break down by taxanomic group
