@@ -1255,120 +1255,38 @@ ggplot(Bird_Abundance_Young_Avg,aes(x=Mean, y=Treatment_Category)) +
 Bird_Abundance_Young_glm <- glm(LnRR ~ Treatment_Category, data = Bird_Abundance_Young)
 anova(Bird_Abundance_Young_glm,test="F")  #0.6143
 
-
 ### Bird Diversity (richness)
 Bird_Diversity_Richness<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="diversity")) %>%
   filter(Data_Units=="species richness (S)") #only one data point - did not proceed
-
 
 ### Bird Diversity (shannon diversity)
 Bird_Diversity_ShannonD<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="diversity")) %>%
   filter(Data_Units=="shannon diversity") #only one data point - did not proceed
 
-
 ### Bird Diversity (Shannon evenness)
 Bird_Diversity_ShannonE<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="diversity")) %>%
   filter(Data_Units=="Shannon evenness") #only one data point - did not proceed
 
-#### NMDS ####
+#### Plot Abundance * Diversity ####
 
-#Create dataframe for NMDS 
-Wide_RR_Calc<-RR_Calc %>%
-  #all data must be postivie for Bray Curtis dissimilarity -- so following this guide (http://strata.uga.edu/8370/lecturenotes/multidimensionalScaling.html) and adding a constant to each number so ratios are correct but no negative values exist -- there's a function on that website but I do not understand how it works and I get an error so for now I am  just adding 5 to everything (slight lower than the smallest number for the LnRR)
-  mutate(LnRR_5=LnRR+5) %>% 
-  #merge PDF Study ID and study point together
-  mutate(ID=paste(PDF_Study_ID,Study_Point,sep=".")) %>% 
-  select(ID,ResponseVariable,Data_Type,Treatment_Category, LnRR_5) %>% 
-  #Make a wide table using column correct order as overarching columns, fill with values from correct dry weight column, if there is no value for one cell, insert a zero
-  spread(key=ResponseVariable,value=LnRR_5, fill=0)
+Abund_Div<-RR_Calc_Avg %>% 
+  spread(key=Data_Type,value=Mean, fill=0)
+
+Abund_Div<-RR_Calc %>% 
+  select(PDF_Study_ID,Study_Point,Treatment_Category, ResponseVariable,Data_Type,LnRR) %>% 
+  spread(key=Data_Type,value=LnRR, fill=NA) %>%
+  group_by(ResponseVariable, Treatment_Category) %>%
+  summarize(std_ab=sd(abundance,na.rm=TRUE),Mean_ab=mean(abundance,na.rm=TRUE),n_ab=length(abundance),std_div=sd(diversity,na.rm=TRUE),Mean_div=mean(diversity,na.rm=TRUE),n_div=length(diversity)) %>%
+  mutate(St_Error_div=std_div/sqrt(n_div),St_Error_ab=std_ab/sqrt(n_ab)) %>% 
+  ungroup() %>% 
+  filter(ResponseVariable!="SmallMammal" & ResponseVariable!="Bird" & ResponseVariable!="TotalSoilCarbon" & ResponseVariable !="TotalSoilNitrogen")
   
+ggplot(Abund_Div,aes(Mean_ab, Mean_div,color=Treatment_Category,shape=ResponseVariable))+
+  geom_point()+
+  xlim(-4,4)+
+  ylim(-4,4)+
+  geom_hline(yintercept=0)+geom_vline(xintercept=0)
 
-#separate out diversity and abundance
-Wide_RR_Calc_Diversity<-Wide_RR_Calc %>% 
-  filter(Data_Type=="diversity") %>% 
-  select(-Data_Type)
-             
-Wide_RR_Calc_Abundance<-Wide_RR_Calc %>% 
-  filter(Data_Type=="abundance") %>% 
-  select(-Data_Type)
-
-## Diversity
-BC_Data_Div <- metaMDS(Wide_RR_Calc_Diversity[,3:8],na.rm=TRUE)
-#look at species signiciance driving NMDS 
-intrinsics <- envfit(BC_Data_Div, Wide_RR_Calc_Diversity, permutations = 999,na.rm = na.rm)
-head(intrinsics)
-#Make a data frame called sites with 1 column and same number of rows that is in Wide Order weight
-sites_civ <- 1:nrow(Wide_RR_Calc_Diversity)
-#Make a new data table called BC_Meta_Data and use data from Wide_Relative_Cover columns 1-3
-BC_Meta_Data_Div <- Wide_RR_Calc_Diversity[,1:3] %>% 
-  mutate(Trt_Year=paste(Grazing_Treatment,Year,sep="."))
-#make a plot using the dataframe BC_Data and the column "points".  Make Grazing Treatment a factor - make the different grazing treatments different colors
-plot(BC_Data_S$points,col=as.factor(BC_Meta_Data_S$Trt_Year))
-#make elipses using the BC_Data.  Group by grazing treatment and use standard deviation to draw eclipses
-ordiellipse(BC_Data_S,groups = as.factor(BC_Meta_Data_S$Trt_Year),kind = "sd",display = "sites", label = T)
-
-
-
-#sweepnet
-BC_Data_S <- metaMDS(Wide_Order_Weight_S[,6:13])
-#look at species signiciance driving NMDS 
-intrinsics <- envfit(BC_Data_S, Wide_Order_Weight_S, permutations = 999)
-head(intrinsics)
-#Make a data frame called sites with 1 column and same number of rows that is in Wide Order weight
-sites <- 1:nrow(Wide_Order_Weight_S)
-#Make a new data table called BC_Meta_Data and use data from Wide_Relative_Cover columns 1-3
-BC_Meta_Data_S <- Wide_Order_Weight_S[,1:5] %>% 
-  mutate(Trt_Year=paste(Grazing_Treatment,Year,sep="."))
-#make a plot using the dataframe BC_Data and the column "points".  Make Grazing Treatment a factor - make the different grazing treatments different colors
-plot(BC_Data_S$points,col=as.factor(BC_Meta_Data_S$Trt_Year))
-#make elipses using the BC_Data.  Group by grazing treatment and use standard deviation to draw eclipses
-ordiellipse(BC_Data_S,groups = as.factor(BC_Meta_Data_S$Trt_Year),kind = "sd",display = "sites", label = T)
-
-#Use the vegan ellipse function to make ellipses           
-veganCovEllipse<-function (cov, center = c(0, 0), scale = 1, npoints = 100)
-{
-  theta <- (0:npoints) * 2 * pi/npoints
-  Circle <- cbind(cos(theta), sin(theta))
-  t(center + scale * t(Circle %*% chol(cov)))
-}
-#Make a data frame called BC_NMDS and at a column using the first set of "points" in BC_Data and a column using the second set of points.  Group them by watershed
-BC_NMDS_S = data.frame(MDS1 = BC_Data_S$points[,1], MDS2 = BC_Data_S$points[,2],group=BC_Meta_Data_S$Trt_Year)
-#Make data table called BC_NMDS_Graph and bind the BC_Meta_Data, and BC_NMDS data together
-BC_NMDS_Graph_S <- cbind(BC_Meta_Data_S,BC_NMDS_S)
-#Make a data table called BC_Ord_Ellipses using data from BC_Data and watershed information from BC_Meta_Data.  Display sites and find the standard error at a confidence iinterval of 0.95.  Place lables on the graph
-BC_Ord_Ellipses_S<-ordiellipse(BC_Data_S, BC_Meta_Data_S$Trt_Year, display = "sites",
-                               kind = "se", conf = 0.95, label = T)
-#Make a new empty data frame called BC_Ellipses                
-BC_Ellipses_S <- data.frame()
-#Generate ellipses points - switched levels for unique - not sure if it's stil correct but it looks right
-for(g in unique(BC_NMDS_S$group)){
-  BC_Ellipses_S <- rbind(BC_Ellipses_S, cbind(as.data.frame(with(BC_NMDS_S[BC_NMDS_S$group==g,],                                                  veganCovEllipse(BC_Ord_Ellipses_S[[g]]$cov,BC_Ord_Ellipses_S[[g]]$center,BC_Ord_Ellipses_S[[g]]$scale)))
-                                              ,group=g))
-}
-
-#Plot the data from BC_NMDS_Graph, where x=MDS1 and y=MDS2, make an ellipse based on "group"
-NMDS_Sweep<-ggplot(data = BC_NMDS_Graph_S, aes(MDS1,MDS2, shape = group,color=group,linetype=group))+
-  #make a point graph where the points are size 5.  Color them based on exlosure
-  geom_point(size=8, stroke = 2) +
-  #Use the data from BC_Ellipses to make ellipses that are size 1 with a solid line
-  geom_path(data = BC_Ellipses_S, aes(x=NMDS1, y=NMDS2), size=4)+
-  #make shape, color, and linetype in one combined legend instead of three legends
-  labs(color  = "", linetype = "", shape = "")+
-  # make legend 2 columns
-  guides(shape=guide_legend(ncol=2),colour=guide_legend(ncol=2),linetype=guide_legend(ncol=2))+
-  #change order of legend
-  #Use different shapes 
-  scale_shape_manual(values=c(15,16,17,22,21,24),labels = c("Heavy 2020","Destock 2020", "No Grazing 2020","Heavy 2021","Destock 2021", "No Grazing 2021"), breaks = c("HG.2020","LG.2020","NG.2020","HG.2021","LG.2021","NG.2021"),name="")+
-  scale_color_manual(values=c("skyblue3","springgreen3","plum3","royalblue4","springgreen4","plum4"),labels = c("Heavy 2020","Destock 2020", "No Grazing 2020","Heavy 2021","Destock 2021", "No Grazing 2021"), breaks = c("HG.2020","LG.2020","NG.2020","HG.2021","LG.2021","NG.2021"),name="")+
-  scale_linetype_manual(values=c("solid","twodash","longdash","solid","twodash","longdash"),labels = c("Heavy 2020","Destock 2020", "No Grazing 2020","Heavy 2021","Destock 2021", "No Grazing 2021"), breaks = c("HG.2020","LG.2020","NG.2020","HG.2021","LG.2021","NG.2021"),name="")+
-  #make the text size of the legend titles 28
-  theme(legend.key = element_rect(size=3), legend.key.size = unit(1,"centimeters"),legend.position="NONE")+
-  #Label the x-axis "NMDS1" and the y-axis "NMDS2"
-  xlab("NMDS1")+
-  ylab("NMDS2")+
-  theme(text = element_text(size = 55),legend.text=element_text(size=40))+
-  annotate(geom="text", x=-1.5, y=0.8, label="Sweepnet",size=20)
-#export at 2000 x 1800
 
 
 
@@ -1423,7 +1341,7 @@ ggplot()+
 
 #### Tried but decided not to do ####
 
-## Plant Linear Regression Models ##
+#### Plant Linear Regression Models
 
 ### not going to do these because there is not enough spread of the data across longitude to accurately compare
 
@@ -1449,7 +1367,7 @@ RR_Plant_Diversity<-data.table(subset(RR_Calc,ResponseVariable=="Plant" & Data_T
 Diversity_Plants_regression <- RR_Plant_Diversity[,linreg(Longitude~LnRR),by=Treatment_Category]
 Diversity_Plants_regression
 
-## Graphs of Regressions (by longitude) ##
+#### Graphs of Regressions (by longitude) ##
 
 ## Abundance 
 ggplot(data=subset(RR_Calc,Data_Type=="abundance"), aes(x=-Longitude,y=LnRR,fill=Treatment_Category,color=Treatment_Category))+
@@ -1468,7 +1386,7 @@ ggplot(RR_Plant_Diversity, aes(x=-Longitude,y=LnRR,fill=Treatment_Category,color
   geom_smooth(data=subset(RR_Plant_Diversity,Treatment_Category=="2-4yr"),aes(x=-Longitude,y=LnRR,fill=Treatment_Category,color=Treatment_Category),method="lm",se=FALSE)
 
 
-## GLM Model Options not used 
+#### GLM Model Options not used 
 
 #with random effect of PDF_Study ID
 Diversity_Plants_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
@@ -1517,6 +1435,54 @@ anova(Abundance_Arthropods_Glmm_nest)
 
 #Compare AIC Values
 AIC(Abundance_Arthropods_glm,Abundance_Arthropods_Glmm,Abundance_Arthropods_Glmm_nest) #Abundance_Arthropods_Glmm is the best but AIC is 152.7377 compared to glm which is 154.7938
+
+#### NMDS 
+#Create dataframe for NMDS 
+Wide_RR_Calc_Spread<-RR_Calc %>%
+  #all data must be postivie for Bray Curtis dissimilarity -- so following this guide (http://strata.uga.edu/8370/lecturenotes/multidimensionalScaling.html) and adding a constant to each number so ratios are correct but no negative values exist -- there's a function on that website but I do not understand how it works and I get an error so for now I am  just adding 5 to everything (slight lower than the smallest number for the LnRR)
+  mutate(LnRR_5=LnRR+5) %>% 
+  #merge PDF Study ID and study point together
+  mutate(ID=paste(PDF_Study_ID,Study_Point,sep=".")) %>% 
+  select(ID,ResponseVariable,Data_Type,Treatment_Category,LnRR_5) %>% 
+  #Make a wide table using column correct order as overarching columns, fill with values from correct dry weight column, if there is no value for one cell, insert a zero
+  spread(key=ID,value=LnRR_5, fill=0)
+
+#separate out diversity and abundance
+Wide_RR_Calc_Diversity_Spread<-Wide_RR_Calc_Spread %>% 
+  filter(Data_Type=="diversity") %>% 
+  select(-Data_Type)
+
+Wide_RR_Calc_Abundance_Spread<-Wide_RR_Calc_Spread %>% 
+  filter(Data_Type=="abundance") %>% 
+  select(-Data_Type)
+
+## Diversity
+BC_Data_Div_Spread <- metaMDS(Wide_RR_Calc_Diversity_Spread[,4:610],na.rm=TRUE)
+#look at species signiciance driving NMDS 
+intrinsics <- envfit(BC_Data_Div_Spread, Wide_RR_Calc_Diversity_Spread, permutations = 999,na.rm = TRUE)
+head(intrinsics)
+#Make a data frame called sites with 1 column and same number of rows that is in Wide Order weight
+sites_civ <- 1:nrow(Wide_RR_Calc_Diversity_Spread)
+#Make a new data table called BC_Meta_Data and use data from Wide_RR_Calc_Diversity columns 1-2
+BC_Meta_Data_Div_Spread <- Wide_RR_Calc_Diversity_Spread[,1:2] 
+#make a plot using the dataframe BC_Data and the column "points".  Make treatment category a factor - make the different grazing treatments different colors
+plot(BC_Data_Div_Spread$points,col=as.factor(BC_Meta_Data_Div_Spread$ResponseVariable))
+#make elipses using the BC_Data.  Group by grazing treatment and use standard deviation to draw eclipses
+ordiellipse(BC_Data_Div_Spread,groups = as.factor(BC_Meta_Data_Div_Spread$Treatment_Category),kind = "sd",display = "sites", label = T)
+
+## Abundance
+BC_Data_Abun_Spread <- metaMDS(Wide_RR_Calc_Abundance_Spread[,4:610],na.rm=TRUE)
+#look at species signiciance driving NMDS 
+intrinsics <- envfit(BC_Data_Abun_Spread, Wide_RR_Calc_Abundance_Spread, permutations = 999,na.rm = TRUE)
+head(intrinsics)
+#Make a data frame called sites with 1 column and same number of rows that is in Wide Order weight
+sites_civ <- 1:nrow(Wide_RR_Calc_Abundance_Spread)
+#Make a new data table called BC_Meta_Data and use data from Wide_RR_Calc_Diversity columns 1-2
+BC_Meta_Data_Abun_Spread <- Wide_RR_Calc_Abundance_Spread[,1:2] 
+#make a plot using the dataframe BC_Data and the column "points".  Make treatment category a factor - make the different grazing treatments different colors
+plot(BC_Data_Abun_Spread$points,col=as.factor(BC_Meta_Data_Abun_Spread$ResponseVariable))
+#make elipses using the BC_Data.  Group by grazing treatment and use standard deviation to draw eclipses
+ordiellipse(BC_Data_Abun_Spread,groups = as.factor(BC_Meta_Data_Abun_Spread$Treatment_Category),kind = "sd",display = "sites", label = T)
 
 
 
