@@ -995,6 +995,18 @@ ggplot(Plant_Diversity_Avg,aes(x=Mean, y=Treatment_Category)) +
   geom_point(size=4) +
   facet_wrap(~taxonomic_group)
 
+# bar graph
+ggplot(data=Plant_Diversity_Avg,aes(x=Treatment_Category, fill=taxonomic_group, y=Mean))+
+  geom_col(position="dodge")+
+  geom_errorbar(aes(ymin=Mean-St_Error,ymax=Mean+St_Error), width = .2,position=position_dodge(0.9))+
+  #Label the x-axis "Treatment"
+  xlab("Fire Return Interval")+
+  #Label the y-axis "Species Richness"
+  ylab("Ln Response Ratio")+
+  #Make the y-axis extend to 50
+  expand_limits(y=c(-2,2))+
+  geom_hline(yintercept=0)
+
 #Model
 Plant_Diversity_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Diversity_Taxa)
 anova(Plant_Diversity_Taxa_glm,test="F")  #treatment category (p=0.008836), taxonomic group (p=0.790816), interaction (p=0.640497)
@@ -1019,6 +1031,7 @@ ggplot(Plant_Abundance_Biomass_Avg,aes(x=Mean, y=Treatment_Category)) +
   geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
   geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
   geom_point(size=4) 
+
 
 #Model
 Plant_Abundance_Biomass_glm <- glm(LnRR ~ Treatment_Category, data = Plant_Abundance_Biomass)
@@ -1046,6 +1059,18 @@ ggplot(Plant_Abundance_Biomass_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
   geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
   geom_point(size=4) +
   facet_wrap(~taxonomic_group)
+
+# bar graph
+ggplot(data=Plant_Abundance_Biomass_Taxa_Avg,aes(x=Treatment_Category, fill=taxonomic_group, y=Mean))+
+  geom_col(position="dodge")+
+  geom_errorbar(aes(ymin=Mean-St_Error,ymax=Mean+St_Error), width = .2,position=position_dodge(0.9))+
+  #Label the x-axis "Treatment"
+  xlab("Fire Return Interval")+
+  #Label the y-axis "Species Richness"
+  ylab("Ln Response Ratio")+
+  #Make the y-axis extend to 50
+  expand_limits(y=c(-2,2))+
+  geom_hline(yintercept=0)
 
 #Model
 Plant_Abundance_Biomass_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Abundance_Biomass_Taxa)
@@ -1107,6 +1132,17 @@ ggplot(Plant_Abundance_Cover_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
   geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
   geom_point(size=4) +
   facet_wrap(~taxonomic_group)
+
+#bar graph
+ggplot(data=Plant_Abundance_Cover_Taxa_Avg,aes(x=Treatment_Category, fill=taxonomic_group, y=Mean))+
+  geom_col(position="dodge")+
+  geom_errorbar(aes(ymin=Mean-St_Error,ymax=Mean+St_Error), width = .2,position=position_dodge(0.9))+
+  #Label the x-axis "Treatment"
+  xlab("Fire Return Interval")+
+  #Label the y-axis "Species Richness"
+  ylab("Ln Response Ratio")+
+  expand_limits(y=c(-4,4))+
+  geom_hline(yintercept=0)
 
 #Model
 Plant_Abundance_Cover_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Abundance_Cover_Taxa)
@@ -1178,6 +1214,18 @@ ggplot(Arthro_Abundance_Biomass_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
   geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
   geom_point(size=4)+
   facet_wrap(~taxonomic_group)
+
+#bar graph
+ggplot(data=Arthro_Abundance_Biomass_Taxa_Avg,aes(x=Treatment_Category, fill=taxonomic_group, y=Mean))+
+  geom_col(position="dodge")+
+  geom_errorbar(aes(ymin=Mean-St_Error,ymax=Mean+St_Error), width = .2,position=position_dodge(0.9))+
+  #Label the x-axis "Treatment"
+  xlab("Fire Return Interval")+
+  #Label the y-axis "Species Richness"
+  ylab("Ln Response Ratio")+
+  expand_limits(y=c(-4,4))+
+  geom_hline(yintercept=0)
+
 
 #Model
 Arthro_Abundance_Biomass_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Arthro_Abundance_Biomass_Taxa)
