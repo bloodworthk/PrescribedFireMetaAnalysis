@@ -747,7 +747,9 @@ library(multcomp)
 library(data.table)
 #install.packages("tidyverse")
 library(tidyverse)
-#devtools::install_github("ricardo-bion/ggradar")
+#install.packages("devtools")
+library(devtools)
+#devtools::install_github("ricardo-bion/ggradar", dependencies = TRUE)
 library(ggradar)
 library(vegan) 
 
@@ -1328,6 +1330,96 @@ ggplot(Plant_Abundance_Biomass_Taxa_Avg, aes(x = Treatment_Category, y = Mean)) 
   coord_radar() + facet_wrap(~ model,ncol=4) + 
   theme(strip.text.x = element_text(size = rel(0.8)), 
         axis.text.x = element_text(size = rel(0.8))) 
+
+
+### Spider: Plant Diversity with Taxanomic Group ####
+#make dataframe wide
+Plant_Diversity_Spider<-Plant_Diversity_Avg %>% 
+  select(Treatment_Category,taxonomic_group,Mean) %>% 
+  #Make a wide table using column correct order as overarching columns, fill with values from correct dry weight column, if there is no value for one cell, insert a zero
+  spread(key=taxonomic_group,value=Mean, fill=NA) %>% 
+  rename("group"="Treatment_Category") %>% 
+  ggradar(values.radar = c("-2", "-1", "0", "1", "2"), grid.min = -2, grid.mid = 0, grid.max = 2)
+
+install.packages("scales")
+library(scales)
+
+
+str(Plant_Diversity_Spider)
+ggradar(Plant_Diversity_Spider, na.rm=TRUE)
+
+
+
+#create the spider graph 
+ggradar(Plant_Diversity_Spider, na.rm=TRUE)
+       
+
+
+
+ font.radar = "sans",
+        values.radar = c(-2, 0, 2),
+        axis.labels = colnames(plot.data)[-1],
+        grid.min = -2,
+        grid.mid = 0,
+        grid.max = 2,
+        centre.y = grid.min - ((1/9) * (grid.max - grid.min)),
+        plot.extent.x.sf = 1,
+        plot.extent.y.sf = 1.2,
+        x.centre.range = 0.02 * (grid.max - centre.y),
+        label.centre.y = FALSE,
+        grid.line.width = 0.5,
+        gridline.min.linetype = "longdash",
+        gridline.mid.linetype = "longdash",
+        gridline.max.linetype = "longdash",
+        gridline.min.colour = "grey",
+        gridline.mid.colour = "#007A87",
+        gridline.max.colour = "grey",
+        grid.label.size = 6,
+        gridline.label.offset = -0.1 * (grid.max - centre.y),
+        label.gridline.min = TRUE,
+        label.gridline.mid = TRUE,
+        label.gridline.max = TRUE,
+        axis.label.offset = 1.15,
+        axis.label.size = 5,
+        axis.line.colour = "grey",
+        group.line.width = 1.5,
+        group.point.size = 6,
+        group.colours = NULL,
+        background.circle.colour = "#D7D6D1",
+        background.circle.transparency = 0.2,
+        plot.legend = if (nrow(plot.data) > 1) TRUE else FALSE,
+        legend.title = "",
+        plot.title = "",
+        legend.text.size = 14,
+        legend.position = "left",
+        fill = FALSE,
+        fill.alpha = 0.5
+        )
+
+# Define a new coordinate system 
+coord_radar <- function(...) { 
+  structure(coord_polar(...), class = c("radar", "polar", "coord")) 
+} 
+is.linear.radar <- function(coord) TRUE 
+
+ggplot(Plant_Abundance_Biomass_Taxa_Avg, aes(x = Treatment_Category, y = Mean)) + 
+  geom_path(aes(group = taxonomic_group)) +
+  coord_radar() + facet_wrap(~ model,ncol=4) + 
+  theme(strip.text.x = element_text(size = rel(0.8)), 
+        axis.text.x = element_text(size = rel(0.8))) 
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #### Graphs ####
 #map of big data extraction data points so far
