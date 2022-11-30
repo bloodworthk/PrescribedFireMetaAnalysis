@@ -948,22 +948,30 @@ RR_Calc_Avg_Bar<-RR_Calc %>%
   summarize(std_ab=sd(abundance,na.rm=TRUE),Mean_ab=mean(abundance,na.rm=TRUE),n_ab=length(abundance),std_div=sd(diversity,na.rm=TRUE),Mean_div=mean(diversity,na.rm=TRUE),n_div=length(diversity)) %>%
   mutate(St_Error_div=std_div/sqrt(n_div),St_Error_ab=std_ab/sqrt(n_ab)) %>% 
   ungroup() 
+  
+### Plants
+ggplot(data=subset(RR_Calc_Avg,ResponseVariable=="Plant"),aes(x=Treatment_Category, fill=Data_Type, y=Mean))+
+  geom_col(position="dodge")+
+  geom_errorbar(aes(ymin=Mean-St_Error,ymax=Mean+St_Error), width = .2,position=position_dodge(0.9))+
+  #Label the x-axis "Treatment"
+  xlab("Fire Return Interval")+
+  #Label the y-axis "Species Richness"
+  ylab("Ln Response Ratio")+
+  #Make the y-axis extend to 50
+  expand_limits(y=c(-2,2))+
+  geom_hline(yintercept=0)
 
-ggplot(data=subset(RR_Calc_Avg_Bar,ResponseVariable=="plant"),aes(x=Treatment_Category)) +
-  geom_bar(aes(y=Mean_ab),stat="identity",color="black")
-  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
-  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
-  geom_point(size=4) +
-  facet_wrap(~ResponseVariable)
-#save at 2000x1000
-  
-ggplot(data=subset(RR_Calc_Avg_Bar,ResponseVariable=="plant"),aes(x=Treatment_Category,y=Mean_ab, fill=Treatment_Category))+
-    #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.  
-    geom_bar(stat="identity")+
-  
-ggplot(data=subset(RR_Calc_Avg_Bar,ResponseVariable=="plant"),aes(x=Treatment_Category, y=Mean_ab)) +
-    geom_col() +
-    geom_col(aes(y=Treatment_Category, x=Mean_div)) +
+### Arthropods
+ggplot(data=subset(RR_Calc_Avg,ResponseVariable=="Arthropod"),aes(x=Treatment_Category, fill=Data_Type, y=Mean))+
+  geom_col(position="dodge")+
+  geom_errorbar(aes(ymin=Mean-St_Error,ymax=Mean+St_Error), width = .2,position=position_dodge(0.9))+
+  #Label the x-axis "Treatment"
+  xlab("Fire Return Interval")+
+  #Label the y-axis "Species Richness"
+  ylab("Ln Response Ratio")+
+  #Make the y-axis extend to 50
+  expand_limits(y=c(-4,4))+
+  geom_hline(yintercept=0)
 
 #### Subsetting by Taxanomic Group ####
 
@@ -1032,7 +1040,6 @@ Plant_Abundance_Biomass_Taxa_Avg<-Plant_Abundance_Biomass_Taxa%>%
   ungroup()
 
 
-
 #Graph
 ggplot(Plant_Abundance_Biomass_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
   geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
@@ -1053,8 +1060,6 @@ summary(glht(Plant_Abundance_Biomass_Taxa_glm_trt, mcp(Treatment_Category = "Tuk
 Plant_Abundance_Biomass_Taxa_glm_tax <- glm(LnRR ~ taxonomic_group, data = Plant_Abundance_Biomass_Taxa)
 anova(Plant_Abundance_Biomass_Taxa_glm_tax,test="F") 
 summary(glht(Plant_Abundance_Biomass_Taxa_glm_tax, mcp(taxonomic_group = "Tukey"))) 
-
-
 
 
 #### Plant Abundance (cover)
