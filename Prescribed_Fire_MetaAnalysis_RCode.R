@@ -939,6 +939,32 @@ ggplot(data=subset(RR_Calc_Avg,Data_Type=="diversity"),aes(x=Mean, y=Treatment_C
   facet_wrap(~ResponseVariable)
 #save at 2000x1000
 
+#### plant abundance and diversity on same bar graph ####
+
+RR_Calc_Avg_Bar<-RR_Calc %>% 
+  select(PDF_Study_ID,Study_Point,Treatment_Category, ResponseVariable,Data_Type,LnRR) %>% 
+  spread(key=Data_Type,value=LnRR, fill=NA) %>%
+  group_by(ResponseVariable, Treatment_Category) %>%
+  summarize(std_ab=sd(abundance,na.rm=TRUE),Mean_ab=mean(abundance,na.rm=TRUE),n_ab=length(abundance),std_div=sd(diversity,na.rm=TRUE),Mean_div=mean(diversity,na.rm=TRUE),n_div=length(diversity)) %>%
+  mutate(St_Error_div=std_div/sqrt(n_div),St_Error_ab=std_ab/sqrt(n_ab)) %>% 
+  ungroup() 
+
+ggplot(data=subset(RR_Calc_Avg_Bar,ResponseVariable=="plant"),aes(x=Treatment_Category)) +
+  geom_bar(aes(y=Mean_ab),stat="identity",color="black")
+  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
+  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
+  geom_point(size=4) +
+  facet_wrap(~ResponseVariable)
+#save at 2000x1000
+  
+ggplot(data=subset(RR_Calc_Avg_Bar,ResponseVariable=="plant"),aes(x=Treatment_Category,y=Mean_ab, fill=Treatment_Category))+
+    #Make a bar graph where the height of the bars is equal to the data (stat=identity) and you preserve the vertical position while adjusting the horizontal(position_dodge), and fill in the bars with the color grey.  
+    geom_bar(stat="identity")+
+  
+ggplot(data=subset(RR_Calc_Avg_Bar,ResponseVariable=="plant"),aes(x=Treatment_Category, y=Mean_ab)) +
+    geom_col() +
+    geom_col(aes(y=Treatment_Category, x=Mean_div)) +
+
 #### Subsetting by Taxanomic Group ####
 
 #### Plants by Taxanomic and Data Unit ####
@@ -1299,128 +1325,6 @@ ggplot(Abund_Div,aes(Mean_ab, Mean_div,color=Treatment_Category,shape=ResponseVa
   xlab("LnRR of Abundance")+
   ylab("LnRR of Diversity")
 
-
-
-
-#### Radar/Spider Graphs ####
-#trying to figure out
-
-### Plant Abundance with Taxanomic Group
-#make dataframe wide
-Plant_Abundance_Biomass_Spider<-Plant_Abundance_Biomass_Taxa %>% 
-  group_by(Treatment_Category,taxonomic_group) %>% 
-  mutate(Avg_LnRR=mean(LnRR)) %>% 
-  ungroup() %>% 
-  select(Treatment_Category,taxonomic_group,Avg_LnRR) %>% 
-  unique() %>% 
-#Make a wide table using column correct order as overarching columns, fill with values from correct dry weight column, if there is no value for one cell, insert a zero
-  spread(key=taxonomic_group,value=Avg_LnRR, fill=NA)
-
-#create the spider graph 
-ggradar(Plant_Abundance_Biomass_Spider,is_linear = function() TRUE)
-
-# Define a new coordinate system 
-coord_radar <- function(...) { 
-  structure(coord_polar(...), class = c("radar", "polar", "coord")) 
-} 
-is.linear.radar <- function(coord) TRUE 
-
-ggplot(Plant_Abundance_Biomass_Taxa_Avg, aes(x = Treatment_Category, y = Mean)) + 
-  geom_path(aes(group = taxonomic_group)) +
-  coord_radar() + facet_wrap(~ model,ncol=4) + 
-  theme(strip.text.x = element_text(size = rel(0.8)), 
-        axis.text.x = element_text(size = rel(0.8))) 
-
-
-### Spider: Plant Diversity with Taxanomic Group ####
-#make dataframe wide
-Plant_Diversity_Spider<-Plant_Diversity_Avg %>% 
-  select(Treatment_Category,taxonomic_group,Mean) %>% 
-  #Make a wide table using column correct order as overarching columns, fill with values from correct dry weight column, if there is no value for one cell, insert a zero
-  spread(key=taxonomic_group,value=Mean, fill=NA) %>% 
-  rename("group"="Treatment_Category") %>% 
-  ggradar(values.radar = c("-2", "-1", "0", "1", "2"), grid.min = -2, grid.mid = 0, grid.max = 2)
-
-install.packages("scales")
-library(scales)
-
-
-str(Plant_Diversity_Spider)
-ggradar(Plant_Diversity_Spider, na.rm=TRUE)
-
-
-
-#create the spider graph 
-ggradar(Plant_Diversity_Spider, na.rm=TRUE)
-       
-
-
-
- font.radar = "sans",
-        values.radar = c(-2, 0, 2),
-        axis.labels = colnames(plot.data)[-1],
-        grid.min = -2,
-        grid.mid = 0,
-        grid.max = 2,
-        centre.y = grid.min - ((1/9) * (grid.max - grid.min)),
-        plot.extent.x.sf = 1,
-        plot.extent.y.sf = 1.2,
-        x.centre.range = 0.02 * (grid.max - centre.y),
-        label.centre.y = FALSE,
-        grid.line.width = 0.5,
-        gridline.min.linetype = "longdash",
-        gridline.mid.linetype = "longdash",
-        gridline.max.linetype = "longdash",
-        gridline.min.colour = "grey",
-        gridline.mid.colour = "#007A87",
-        gridline.max.colour = "grey",
-        grid.label.size = 6,
-        gridline.label.offset = -0.1 * (grid.max - centre.y),
-        label.gridline.min = TRUE,
-        label.gridline.mid = TRUE,
-        label.gridline.max = TRUE,
-        axis.label.offset = 1.15,
-        axis.label.size = 5,
-        axis.line.colour = "grey",
-        group.line.width = 1.5,
-        group.point.size = 6,
-        group.colours = NULL,
-        background.circle.colour = "#D7D6D1",
-        background.circle.transparency = 0.2,
-        plot.legend = if (nrow(plot.data) > 1) TRUE else FALSE,
-        legend.title = "",
-        plot.title = "",
-        legend.text.size = 14,
-        legend.position = "left",
-        fill = FALSE,
-        fill.alpha = 0.5
-        )
-
-# Define a new coordinate system 
-coord_radar <- function(...) { 
-  structure(coord_polar(...), class = c("radar", "polar", "coord")) 
-} 
-is.linear.radar <- function(coord) TRUE 
-
-ggplot(Plant_Abundance_Biomass_Taxa_Avg, aes(x = Treatment_Category, y = Mean)) + 
-  geom_path(aes(group = taxonomic_group)) +
-  coord_radar() + facet_wrap(~ model,ncol=4) + 
-  theme(strip.text.x = element_text(size = rel(0.8)), 
-        axis.text.x = element_text(size = rel(0.8))) 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #### Graphs ####
 #map of big data extraction data points so far
 ggplot()+
@@ -1586,7 +1490,107 @@ plot(BC_Data_Abun_Spread$points,col=as.factor(BC_Meta_Data_Abun_Spread$ResponseV
 #make elipses using the BC_Data.  Group by grazing treatment and use standard deviation to draw eclipses
 ordiellipse(BC_Data_Abun_Spread,groups = as.factor(BC_Meta_Data_Abun_Spread$Treatment_Category),kind = "sd",display = "sites", label = T)
 
+#### Radar/Spider Graphs ####
+#trying to figure out
 
+### Plant Abundance with Taxanomic Group
+#make dataframe wide
+Plant_Abundance_Biomass_Spider<-Plant_Abundance_Biomass_Taxa %>% 
+  group_by(Treatment_Category,taxonomic_group) %>% 
+  mutate(Avg_LnRR=mean(LnRR)) %>% 
+  ungroup() %>% 
+  select(Treatment_Category,taxonomic_group,Avg_LnRR) %>% 
+  unique() %>% 
+  #Make a wide table using column correct order as overarching columns, fill with values from correct dry weight column, if there is no value for one cell, insert a zero
+  spread(key=taxonomic_group,value=Avg_LnRR, fill=NA)
+
+#create the spider graph 
+ggradar(Plant_Abundance_Biomass_Spider,is_linear = function() TRUE)
+
+# Define a new coordinate system 
+coord_radar <- function(...) { 
+  structure(coord_polar(...), class = c("radar", "polar", "coord")) 
+} 
+is.linear.radar <- function(coord) TRUE 
+
+ggplot(Plant_Abundance_Biomass_Taxa_Avg, aes(x = Treatment_Category, y = Mean)) + 
+  geom_path(aes(group = taxonomic_group)) +
+  coord_radar() + facet_wrap(~ model,ncol=4) + 
+  theme(strip.text.x = element_text(size = rel(0.8)), 
+        axis.text.x = element_text(size = rel(0.8))) 
+
+
+### Spider: Plant Diversity with Taxanomic Group ####
+#make dataframe wide
+Plant_Diversity_Spider<-Plant_Diversity_Avg %>% 
+  select(Treatment_Category,taxonomic_group,Mean) %>% 
+  #Make a wide table using column correct order as overarching columns, fill with values from correct dry weight column, if there is no value for one cell, insert a zero
+  spread(key=taxonomic_group,value=Mean, fill=NA) %>% 
+  rename("group"="Treatment_Category") %>% 
+  ggradar(values.radar = c("-2", "-1", "0", "1", "2"), grid.min = -2, grid.mid = 0, grid.max = 2)
+
+install.packages("scales")
+library(scales)
+
+
+str(Plant_Diversity_Spider)
+ggradar(Plant_Diversity_Spider, na.rm=TRUE)
+
+
+
+#create the spider graph 
+ggradar(Plant_Diversity_Spider, na.rm=TRUE,
+        font.radar = "sans",
+        values.radar = c(-2, 0, 2),
+        axis.labels = colnames(plot.data)[-1],
+        grid.min = -2,
+        grid.mid = 0,
+        grid.max = 2,
+        centre.y = grid.min - ((1/9) * (grid.max - grid.min)),
+        plot.extent.x.sf = 1,
+        plot.extent.y.sf = 1.2,
+        x.centre.range = 0.02 * (grid.max - centre.y),
+        label.centre.y = FALSE,
+        grid.line.width = 0.5,
+        gridline.min.linetype = "longdash",
+        gridline.mid.linetype = "longdash",
+        gridline.max.linetype = "longdash",
+        gridline.min.colour = "grey",
+        gridline.mid.colour = "#007A87",
+        gridline.max.colour = "grey",
+        grid.label.size = 6,
+        gridline.label.offset = -0.1 * (grid.max - centre.y),
+        label.gridline.min = TRUE,
+        label.gridline.mid = TRUE,
+        label.gridline.max = TRUE,
+        axis.label.offset = 1.15,
+        axis.label.size = 5,
+        axis.line.colour = "grey",
+        group.line.width = 1.5,
+        group.point.size = 6,
+        group.colours = NULL,
+        background.circle.colour = "#D7D6D1",
+        background.circle.transparency = 0.2,
+        plot.legend = if (nrow(plot.data) > 1) TRUE else FALSE,
+        legend.title = "",
+        plot.title = "",
+        legend.text.size = 14,
+        legend.position = "left",
+        fill = FALSE,
+        fill.alpha = 0.5
+)
+
+# Define a new coordinate system 
+coord_radar <- function(...) { 
+  structure(coord_polar(...), class = c("radar", "polar", "coord")) 
+} 
+is.linear.radar <- function(coord) TRUE 
+
+ggplot(Plant_Abundance_Biomass_Taxa_Avg, aes(x = Treatment_Category, y = Mean)) + 
+  geom_path(aes(group = taxonomic_group)) +
+  coord_radar() + facet_wrap(~ model,ncol=4) + 
+  theme(strip.text.x = element_text(size = rel(0.8)), 
+        axis.text.x = element_text(size = rel(0.8))) 
 
 
 
