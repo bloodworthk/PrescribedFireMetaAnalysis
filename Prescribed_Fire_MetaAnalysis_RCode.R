@@ -759,6 +759,13 @@ setwd("~/Library/CloudStorage/Box-Box/TNC_TGP_RxFire/Data")
 #Bloodworth - PC
 setwd("/Users/kjbloodw/Box/TNC_TGP_RxFire/Data")
 
+#### Set ggplot base ####
+#Set ggplot2 theme to black and white
+theme_set(theme_bw())
+#Update ggplot2 theme - make box around the x-axis title size 30, vertically justify x-axis title to 0.35, Place a margin of 15 around the x-axis title.  Make the x-axis title size 30. For y-axis title, make the box size 30, put the writing at a 90 degree angle, and vertically justify the title to 0.5.  Add a margin of 15 and make the y-axis text size 25. Make the plot title size 30 and vertically justify it to 2.  Do not add any grid lines.  Do not add a legend title, and make the legend size 20
+theme_update(axis.title.x=element_text(size=30, vjust=-0.35, margin=margin(t=15)),
+             axis.text.x=element_text(size=30), axis.title.y=element_text(size=30, angle=90, vjust=0.5,margin=margin(r=15)), axis.text.y=element_text(size=30), plot.title = element_text(size=30, vjust=2), panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.title=element_text(size=30), legend.text=element_text(size=30))
+
 #read in dataframe with data from main extraction
 Data_extraction<-read.csv("Data Extraction/PrescribedFire_DataExtraction_Main.csv")
 
@@ -1088,7 +1095,6 @@ anova(Plant_Abundance_Cover_Taxa_glm_Int,test="F")
 summary(glht(Plant_Abundance_Cover_Taxa_glm_Int, mcp(Taxa_Trt = "Tukey")))
 
 
-
 #need to make column with taxa and treatment in it
 summary(glht(Plant_Abundance_Cover_Taxa_glm, mcp(Treatment_Category = "Tukey"))) #2-4 yr - 1 yr (p=0.0266), fire/grazing - 1 yr (p=8832), fire/grazing - 2-4 yr(p=0.3471)
 
@@ -1282,10 +1288,14 @@ Abund_Div<-RR_Calc %>%
   filter(ResponseVariable!="SmallMammal" & ResponseVariable!="Bird" & ResponseVariable!="TotalSoilCarbon" & ResponseVariable !="TotalSoilNitrogen")
   
 ggplot(Abund_Div,aes(Mean_ab, Mean_div,color=Treatment_Category,shape=ResponseVariable))+
-  geom_point()+
+  geom_point(size=5)+
   xlim(-4,4)+
   ylim(-4,4)+
-  geom_hline(yintercept=0)+geom_vline(xintercept=0)
+  geom_hline(yintercept=0)+geom_vline(xintercept=0)+
+  scale_color_manual(values=c("darkgreen","blue4","darkorange3"),labels = c("1 year fire frequency", "2-4 year fire frequency","Fire and Grazing"), breaks = c("1yr","2-4yr","fire + grazing"),name="Fire Frequency")+
+  scale_shape_manual(values=c(15,17),labels=c("Arthropods","Plants"),breaks=c("Arthropod","Plant"),name="Response Variable")+
+  xlab("LnRR of Abundance")+
+  ylab("LnRR of Diversity")
 
 
 
