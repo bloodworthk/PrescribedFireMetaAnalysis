@@ -1378,7 +1378,14 @@ ggplot(Abund_Div,aes(Mean_ab, Mean_div,color=Treatment_Category,shape=ResponseVa
   xlab("LnRR of Abundance")+
   ylab("LnRR of Diversity")
 
-#### Graphs ####
+#### Map of Study Locations ####
+
+Map_Dataframe<-RR_Calc %>% 
+  filter(Longitude!="" & Latitude!="") %>% 
+  mutate(ID=paste(PDF_Study_ID,Study_Point,sep = "_")) %>% 
+  select(ID,Longitude,Latitude,ResponseVariable)
+
+
 #map of big data extraction data points so far
 ggplot()+
   geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
@@ -1386,14 +1393,12 @@ ggplot()+
   geom_polygon(data = TGP_MapData_Canada, aes(x=long, y=lat, group = country.etc, fill = country.etc),fill="gray")+
   borders("state",colour="black") +
   xlim(-180,-50)+
-  geom_count(data=Data_extraction, mapping=aes(x=Longitude,y=Latitude,fill=PDF_Study_ID)) +  #this is the dataframe of lat/long, and the points are being colored by num_codominants, with the point shape and size specified at the end fill=response variable
+  geom_count(data=Map_Dataframe, mapping=aes(x=Longitude,y=Latitude,fill=ResponseVariable,shape=ResponseVariable)) +  #this is the dataframe of lat/long, and the points are being colored by num_codominants, with the point shape and size specified at the end fill=response variable 
   scale_size_area()+
   scale_colour_manual(values=GeneralGrantpal)+
-  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black"),legend.position="none") + #formatting the text
+  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
   ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
-  xlab(expression("Longitude "*degree*"")) +
-  labs(fill="Response Variable") + #legend label
-  theme(legend.position=c(0.15,0.2))  #legend position
+  xlab(expression("Longitude "*degree*"")) 
 #export at 1500 x 1000
 
 
