@@ -1365,16 +1365,28 @@ Abund_Div<-RR_Calc %>%
   group_by(ResponseVariable, Treatment_Category) %>%
   summarize(std_ab=sd(abundance,na.rm=TRUE),Mean_ab=mean(abundance,na.rm=TRUE),n_ab=length(abundance),std_div=sd(diversity,na.rm=TRUE),Mean_div=mean(diversity,na.rm=TRUE),n_div=length(diversity)) %>%
   mutate(St_Error_div=std_div/sqrt(n_div),St_Error_ab=std_ab/sqrt(n_ab)) %>% 
-  ungroup() %>% 
-  filter(ResponseVariable!="SmallMammal" & ResponseVariable!="Bird" & ResponseVariable!="TotalSoilCarbon" & ResponseVariable !="TotalSoilNitrogen")
+  mutate(margin_ab=qt(0.975,df=n_ab-1)*Mean_ab/sqrt(n_ab)) %>% 
+  mutate(margin_div=qt(0.975,df=n_div-1)*Mean_div/sqrt(n_div)) %>% 
+  mutate(lowerinterval_ab=Mean_ab-margin_ab) %>% 
+  mutate(upperinterval_ab=Mean_ab+margin_ab) %>% 
+  mutate(lowerinterval_div=Mean_div-margin_div) %>% 
+  mutate(upperinterval_div=Mean_div+margin_div) %>% 
+  ungroup() 
+
+Abund_Div[is.na(Abund_Div)] <- 0
+
+# The palette with grey:
+cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00")
   
-ggplot(Abund_Div,aes(Mean_ab, Mean_div,color=Treatment_Category,shape=ResponseVariable))+
-  geom_point(size=5)+
+ggplot(Abund_Div,aes(x=Mean_ab, y=Mean_div,color=Treatment_Category,shape=ResponseVariable))+
+  geom_point(size=8)+
   xlim(-4,4)+
   ylim(-4,4)+
   geom_hline(yintercept=0)+geom_vline(xintercept=0)+
-  scale_color_manual(values=c("darkgreen","blue4","darkorange3"),labels = c("1 year fire frequency", "2-4 year fire frequency","Fire and Grazing"), breaks = c("1yr","2-4yr","fire + grazing"),name="Fire Frequency")+
-  scale_shape_manual(values=c(15,17),labels=c("Arthropods","Plants"),breaks=c("Arthropod","Plant"),name="Response Variable")+
+  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = .8, height = .2)+
+  geom_errorbar(aes(ymin=lowerinterval_div,ymax=upperinterval_div), size = .8)+
+  scale_color_manual(values=cbPalette,labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
+  scale_shape_manual(values=c(15,16,17),labels = c("1 year fire frequency", "2-4 year fire frequency","Fire and Grazing"), breaks = c("1yr","2-4yr","fire + grazing"),name="Fire Frequency")+
   xlab("LnRR of Abundance")+
   ylab("LnRR of Diversity")
 
