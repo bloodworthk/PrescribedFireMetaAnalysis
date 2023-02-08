@@ -1378,17 +1378,64 @@ Abund_Div[is.na(Abund_Div)] <- 0
 # The palette with grey:
 cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00")
   
-ggplot(Abund_Div,aes(x=Mean_ab, y=Mean_div,color=Treatment_Category,shape=ResponseVariable))+
+#all fire return intervals
+ggplot(Abund_Div,aes(x=Mean_ab, y=Mean_div,color=ResponseVariable,shape=Treatment_Category))+
   geom_point(size=8)+
   xlim(-4,4)+
   ylim(-4,4)+
   geom_hline(yintercept=0)+geom_vline(xintercept=0)+
-  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = .8, height = .2)+
-  geom_errorbar(aes(ymin=lowerinterval_div,ymax=upperinterval_div), size = .8)+
-  scale_color_manual(values=cbPalette,labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
+  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), linewidth = .8, height = .2)+
+  geom_errorbar(aes(ymin=lowerinterval_div,ymax=upperinterval_div), linewidth = .8)+
   scale_shape_manual(values=c(15,16,17),labels = c("1 year fire frequency", "2-4 year fire frequency","Fire and Grazing"), breaks = c("1yr","2-4yr","fire + grazing"),name="Fire Frequency")+
+  scale_color_manual(values=cbPalette,labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
   xlab("LnRR of Abundance")+
   ylab("LnRR of Diversity")
+#save at 2000 x 1500
+
+#each fire return interval individually
+
+#1 yr
+Fire1yr<-ggplot(data=subset(Abund_Div,Treatment_Category=="1yr"),aes(x=Mean_ab, y=Mean_div,shape=ResponseVariable,color=ResponseVariable))+
+  geom_point(size=8)+
+  xlim(-4,4)+
+  ylim(-4,4)+
+  geom_hline(yintercept=0)+geom_vline(xintercept=0)+
+  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), linewidth = 0.9, height = .5)+
+  geom_errorbar(aes(ymin=lowerinterval_div,ymax=upperinterval_div), linewidth = 0.9)+
+  scale_shape_manual(values=c(15,16,17,21,22,24),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
+  scale_color_manual(values=cbPalette,labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
+  xlab("LnRR of Abundance")+
+  ylab("LnRR of Diversity")
+#save at 1500 x 1000
+
+#2-4 yr
+Fire2_4yr<-ggplot(data=subset(Abund_Div,Treatment_Category=="2-4yr"),aes(x=Mean_ab, y=Mean_div,shape=ResponseVariable,color=ResponseVariable))+
+  geom_point(size=8)+
+  xlim(-4,4)+
+  ylim(-4,4)+
+  geom_hline(yintercept=0)+geom_vline(xintercept=0)+
+  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), linewidth = 0.9, height = .5)+
+  geom_errorbar(aes(ymin=lowerinterval_div,ymax=upperinterval_div), linewidth = 0.9)+
+  scale_shape_manual(values=c(15,16,17,21,22,24),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
+  scale_color_manual(values=cbPalette,labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
+  xlab("LnRR of Abundance")+
+  ylab("LnRR of Diversity")
+#save at 1500 x 1000
+
+#Fire+grazing
+Fire_Grazing<-ggplot(data=subset(Abund_Div,Treatment_Category=="fire + grazing"),aes(x=Mean_ab, y=Mean_div,shape=ResponseVariable,color=ResponseVariable))+
+  geom_point(size=8)+
+  xlim(-4,4)+
+  ylim(-4,4)+
+  geom_hline(yintercept=0)+geom_vline(xintercept=0)+
+  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), linewidth = 0.9, height = .5)+
+  geom_errorbar(aes(ymin=lowerinterval_div,ymax=upperinterval_div), linewidth = 0.9)+
+  scale_shape_manual(values=c(15,16,17,21,22,24),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
+  scale_color_manual(values=cbPalette,labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
+  xlab("LnRR of Abundance")+
+  ylab("LnRR of Diversity")
+#save at 1500 x 1000
+
 
 #### Map of Study Locations ####
 
