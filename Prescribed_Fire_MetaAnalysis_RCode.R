@@ -626,7 +626,8 @@ Map_Dataframe<-BasicDataExtraction %>%
 
 #create dataframe with just NA map data
 NA_MapData<-map_data("world") %>% 
-  filter(region==c("USA","Canada"))
+  filter(region==c("USA")) %>% 
+  filter(subregion!="Hawaii" & subregion!="Alaska")
 
 #dataframe with only US - TGP states in it
 TGP_MapData<-map_data("state")%>% 
@@ -754,8 +755,10 @@ library(ggradar)
 library(grid)
 #install.packages("ggimage")
 library(ggimage)
+#install.packages("maps")
+library(maps)
 #install.packages("rsvg")
-library("rsvg")
+library(rsvg)
 library(vegan) 
 
 #### Read in Data ####
@@ -847,7 +850,8 @@ RR_Calc<-RR_by_Hand %>%
   filter(Data_Type!="rarity") %>% 
   group_by(PDF_Study_ID,ResponseVariable,Data_Type,DataType, Treatment_Category) %>% 
   mutate(Study_Point_n=length(Study_Point)) %>% 
-  ungroup()
+  ungroup() %>% 
+  mutate(DataType=ifelse(DataType=="Abundace", "Abundance",DataType))
 
 #### Visualize the data with Histograms ####
 #histogram of all data
@@ -1978,3 +1982,131 @@ ggplot(data=subset(RR_Calc,Data_Type=="diversity"), aes(y=Latitude,x=LnRR,fill=T
   expand_limits(y=48)+
   geom_vline(xintercept=0)
 #save at 2000 x 1000
+
+#### Map of Study Locations ####
+
+Map_Dataframe<-RR_Calc %>% 
+  filter(Longitude!="" & Latitude!="") %>% 
+  mutate(ID=paste(PDF_Study_ID,Study_Point,sep = "_")) %>% 
+  select(ID,Longitude,Latitude,ResponseVariable,DataType)
+
+
+#map of big data extraction data points so far
+ggplot()+
+  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
+  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
+  borders("state",colour="black") +
+  xlim(-130,-65)+
+  geom_count(data=Map_Dataframe, mapping=aes(x=Longitude,y=Latitude,shape=DataType,color=ResponseVariable)) +  
+  scale_size_area(max_size=20,breaks=c(1,5,10,50,100,150,200))+
+  #scale_colour_manual(values=GeneralGrantpal)+
+  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
+  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
+  xlab(expression("Longitude "*degree*""))+
+  guides(colour = guide_legend(override.aes = list(size=10)))
+#export at 1500 x 1000
+
+
+#map of each response variable
+#Plants
+Plant_Map<-ggplot()+
+  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
+  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
+  borders("state",colour="black") +
+  xlim(-130,-65)+
+  geom_count(data=subset(Map_Dataframe,ResponseVariable=="Plant"), mapping=aes(x=Longitude,y=Latitude,shape=DataType,color=DataType)) + 
+  scale_size_area(max_size=20,breaks=c(1,5,10,50,100,150,200))+
+  #scale_colour_manual(values=GeneralGrantpal)+
+  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
+  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
+  xlab(expression("Longitude "*degree*""))+
+  theme(axis.text.y=element_text(size=55),axis.text.x=element_blank(),axis.title.y=element_text(size=55),axis.title.x=element_blank(),legend.position = c(0.9,0.7))+
+  annotate("text", x=-120, y=53, label = "A. Plants", size=20)+
+  guides(colour = guide_legend(override.aes = list(size=10)))
+
+#arthropods
+Arthropod_Map<-ggplot()+
+  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
+  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
+  borders("state",colour="black") +
+  xlim(-130,-65)+
+  geom_count(data=subset(Map_Dataframe,ResponseVariable=="Arthropod"), mapping=aes(x=Longitude,y=Latitude,shape=DataType,color=DataType)) +  #this is the dataframe of lat/long, and the points are being colored by num_codominants, with the point shape and size specified at the end fill=response variable 
+  scale_size_area(max_size=20,breaks=c(1,5,10,50,100,150,200))+
+  #scale_colour_manual(values=GeneralGrantpal)+
+  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
+  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
+  xlab(expression("Longitude "*degree*""))+ 
+  theme(axis.text.y=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position = c(0.9,0.7))+
+  annotate("text", x=-120, y=53, label = "B. Arthropods", size=20)
+  
+
+#Birds
+Bird_Map<-ggplot()+
+  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
+  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
+  borders("state",colour="black") +
+  xlim(-130,-65)+
+  geom_count(data=subset(Map_Dataframe,ResponseVariable=="Bird"), mapping=aes(x=Longitude,y=Latitude,shape=DataType,color=DataType)) +  
+  scale_size_area(max_size=20,breaks=c(1,5,10,50,100,150,200))+
+  #scale_colour_manual(values=GeneralGrantpal)+
+  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
+  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
+  xlab(expression("Longitude "*degree*""))+
+  theme(axis.text.y=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position = c(0.9,0.7))+
+  annotate("text", x=-120, y=53, label = "C. Birds", size=20)
+
+#SmallMammals
+SmallMammal_Map<-ggplot()+
+  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
+  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
+  borders("state",colour="black") +
+  xlim(-130,-65)+
+  geom_count(data=subset(Map_Dataframe,ResponseVariable=="SmallMammal"), mapping=aes(x=Longitude,y=Latitude,shape=DataType,color=DataType)) +  
+  scale_size_area(max_size=20,breaks=c(1,5,10,50,100,150,200))+
+  #scale_colour_manual(values=GeneralGrantpal)+
+  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
+  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
+  xlab(expression("Longitude "*degree*""))+
+  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_text(size=55),axis.title.x=element_text(size=55),legend.position = c(0.9,0.7))+
+  annotate("text", x=-120, y=53, label = "D. Small Mammals", size=20)
+
+
+#TotalSoilCarbon
+TotalSoilCarbon_Map<-ggplot()+
+  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
+  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
+  borders("state",colour="black") +
+  xlim(-130,-65)+
+  geom_count(data=subset(Map_Dataframe,ResponseVariable=="TotalSoilCarbon"), mapping=aes(x=Longitude,y=Latitude)) +  
+  scale_size_area(max_size=20,breaks=c(1,5,10,50,100,150,200))+
+  #scale_colour_manual(values=GeneralGrantpal)+
+  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
+  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
+  xlab(expression("Longitude "*degree*""))+
+  theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position = c(0.9,0.7))+
+  annotate("text", x=-120, y=53, label = "E. Total Soil Carbon", size=20)
+
+#TotalSoilNitrogen
+TotalSoilNitrogen_Map<-ggplot()+
+  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
+  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
+  borders("state",colour="black") +
+  xlim(-130,-65)+
+  geom_count(data=subset(Map_Dataframe,ResponseVariable=="TotalSoilNitrogen"), mapping=aes(x=Longitude,y=Latitude)) +
+scale_size_area(max_size=20,breaks=c(1,5,10,50,100,150,200))+
+  #scale_colour_manual(values=GeneralGrantpal)+
+  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
+  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
+  xlab(expression("Longitude "*degree*""))+
+  theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position = c(0.9,0.7))+
+  annotate("text", x=-120, y=53, label = "F. Total Soil Nitrogen", size=20)
+
+#Create 6 paneled graph
+pushViewport(viewport(layout=grid.layout(2,3)))
+print(Plant_Map,vp=viewport(layout.pos.row=1, layout.pos.col =1))
+print(Arthropod_Map,vp=viewport(layout.pos.row=1, layout.pos.col =2))
+print(Bird_Map,vp=viewport(layout.pos.row=1, layout.pos.col =3))
+print(SmallMammal_Map,vp=viewport(layout.pos.row=2, layout.pos.col =1))
+print(TotalSoilCarbon_Map,vp=viewport(layout.pos.row=2, layout.pos.col =2))
+print(TotalSoilNitrogen_Map,vp=viewport(layout.pos.row=2, layout.pos.col =3))
+#Save at 4000 x 1500 
