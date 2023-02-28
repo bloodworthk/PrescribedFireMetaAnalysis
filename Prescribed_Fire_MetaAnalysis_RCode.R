@@ -1867,5 +1867,114 @@ print(Fire_Grazing_DivAb,vp=viewport(layout.pos.row=1, layout.pos.col =3))
 #Save at 4000 x 1500  
 
 
+#### Linear Regression Models (lat instead of long)
 
+#Create function for linear regression
+linreg = function (formula) {
+  m=lm(formula)
+  list(slope=coefficients(m)[2], intercept=coefficients(m)[1], adj.r2=summary(m)$adj.r.squared, f=summary(m)$fstatistic[1],p.val=summary(m)$coefficients[2,4])
+}
 
+### Regression - Plants 
+#Look at abundance of Plants
+#create data table of plant abundance
+RR_Plant_Abundance<-data.table(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
+
+#linreg is x by y
+Abundance_Plants_regression <- RR_Plant_Abundance[,linreg(Latitude~LnRR),by=Treatment_Category]
+Abundance_Plants_regression #negative r2 means so much spread that there is no trend (could be nice)
+#negative R2 for 1 yr
+#positive R2 for 2-4 yr & fire+grazing
+#significant for 2-4 yr
+
+#Look at diversity of Plants
+#create data table of plant diversity
+RR_Plant_Diversity<-data.table(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
+
+#linreg is x by y
+Diversity_Plants_regression <- RR_Plant_Diversity[,linreg(Latitude~LnRR),by=Treatment_Category]
+Diversity_Plants_regression
+#positive R2 for all
+#marginally significant (0.09) for 2-4 year
+
+### Regression - Arthropods 
+#Look at abundance of Arthropods
+#create data table of Arthropods abundance
+RR_Arthropod_Abundance<-data.table(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
+
+#linreg is x by y
+Abundance_Arthropod_regression <- RR_Arthropod_Abundance[,linreg(Latitude~LnRR),by=Treatment_Category]
+Abundance_Arthropod_regression #negative r2 means so much spread that there is no trend (could be nice)
+#negative R2 for 1 yr and 2-4 year, NA for 1 year
+
+#Look at diversity of Arthropods
+#create data table of Arthropods diversity
+RR_Arthropod_Diversity<-data.table(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
+
+#linreg is x by y (doesnt work)
+Diversity_Arthropod_regression <- RR_Arthropod_Diversity[,linreg(Latitude~LnRR),by=Treatment_Category]
+Diversity_Arthropod_regression
+
+### Regression - Bird 
+#Look at abundance of Bird
+#create data table of Bird abundance
+RR_Bird_Abundance<-data.table(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="abundance"))
+
+#linreg is x by y
+Abundance_Bird_regression <- RR_Bird_Abundance[,linreg(Latitude~LnRR),by=Treatment_Category]
+Abundance_Bird_regression #doesnt work
+
+#Look at diversity of Birds
+#create data table of Birds diversity
+RR_Bird_Diversity<-data.table(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="diversity"))
+
+#linreg is x by y (doesnt work)
+Diversity_Bird_regression <- RR_Bird_Diversity[,linreg(Latitude~LnRR),by=Treatment_Category]
+Diversity_Bird_regression #- R2 for 2-4 year
+
+### Regression - SmallMammal 
+#Look at abundance of SmallMammal
+#create data table of SmallMammal abundance
+RR_SmallMammal_Abundance<-data.table(subset(RR_Calc,ResponseVariable=="SmallMammal" & Data_Type=="abundance"))
+
+#linreg is x by y
+Abundance_SmallMammal_regression <- RR_SmallMammal_Abundance[,linreg(Latitude~LnRR),by=Treatment_Category]
+Abundance_SmallMammal_regression #-r2 for 1 yr, NA for 2-4yr
+
+### Regression - TotalSoilCarbon 
+#Look at abundance of TotalSoilCarbon
+#create data table of TotalSoilCarbon abundance
+RR_TotalSoilCarbon_Abundance<-data.table(subset(RR_Calc,ResponseVariable=="TotalSoilCarbon" & Data_Type=="abundance"))
+
+#linreg is x by y
+Abundance_TotalSoilCarbon_regression <- RR_TotalSoilCarbon_Abundance[,linreg(Latitude~LnRR),by=Treatment_Category]
+Abundance_TotalSoilCarbon_regression #doesnt work
+
+### Regression - TotalSoilNitrogen 
+#Look at abundance of TotalSoilNitrogen
+#create data table of TotalSoilNitrogen abundance
+RR_TotalSoilNitrogen_Abundance<-data.table(subset(RR_Calc,ResponseVariable=="TotalSoilNitrogen" & Data_Type=="abundance"))
+
+#linreg is x by y
+Abundance_TotalSoilNitrogen_regression <- RR_TotalSoilNitrogen_Abundance[,linreg(Latitude~LnRR),by=Treatment_Category]
+Abundance_TotalSoilNitrogen_regression #doesnt work
+
+#### Graphs of Regressions (by latitude) ##
+
+## Abundance 
+ggplot(data=subset(RR_Calc,Data_Type=="abundance"), aes(y=Latitude,x=LnRR,fill=Treatment_Category,color=Treatment_Category))+
+  geom_jitter(size=4)+
+  geom_smooth(data=subset(RR_Plant_Abundance,Treatment_Category=="2-4yr"),aes(y=Latitude,x=LnRR,fill=Treatment_Category,color=Treatment_Category),method="lm",se=FALSE)+
+  facet_wrap(~ResponseVariable)+
+  expand_limits(y=48)+
+  geom_vline(xintercept=0)
+#save at 2000 x 1000
+
+## Diversity
+ggplot(data=subset(RR_Calc,Data_Type=="diversity"), aes(y=Latitude,x=LnRR,fill=Treatment_Category,color=Treatment_Category))+
+  geom_jitter(size=4)+
+  geom_smooth(data=subset(RR_Plant_Abundance,Treatment_Category=="2-4yr"),aes(y=Latitude,x=LnRR,fill=Treatment_Category,color=Treatment_Category),method="lm",se=FALSE,linetype=2)+
+  facet_wrap(~ResponseVariable)+
+  expand_limits(y=48)+
+  geom_vline(xintercept=0)
+#save at 2000 x 1000
