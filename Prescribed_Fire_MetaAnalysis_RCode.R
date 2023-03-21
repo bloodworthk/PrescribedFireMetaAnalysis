@@ -1759,24 +1759,12 @@ ResponseVariable_Images<-Abund_Div %>%
 
 Abund_Div_Image<-Abund_Div %>% 
   left_join(ResponseVariable_Images) %>% 
-  select(ResponseVariable,Treatment_Category,Mean_ab,lowerinterval_ab,upperinterval_ab,Mean_div, lowerinterval_div, upperinterval_div,image)
-
-Abund_Div_Image_1yr<-Abund_Div_Image %>% 
-  filter(Treatment_Category=="1yr") %>% 
-  arrange(Mean_ab)
-
-Abund_Div_Image_2_4yr<-Abund_Div_Image %>% 
-  filter(Treatment_Category=="2-4yr")%>% 
-  arrange(Mean_ab)
-
-Abund_Div_Image_fire_grazing<-Abund_Div_Image %>% 
-  filter(Treatment_Category=="fire + grazing") %>% 
-  arrange(Mean_div)
+  select(ResponseVariable,Treatment_Category,n_ab, Mean_ab,lowerinterval_ab,upperinterval_ab,n_div,Mean_div, lowerinterval_div, upperinterval_div,image)
 
 
 #Abundance * Diversity: each fire return interval individually
 #1 yr
-Fire1yr<-ggplot(data=subset(Abund_Div_Image_1yr,Treatment_Category=="1yr"),aes(x=Mean_ab, y=Mean_div,shape=as.factor(ResponseVariable),colour=as.factor(ResponseVariable),size=as.factor(ResponseVariable)))+
+Fire1yr<-ggplot(data=subset(Abund_Div_Image,Treatment_Category=="1yr"),aes(x=Mean_ab, y=Mean_div,shape=as.factor(ResponseVariable),colour=as.factor(ResponseVariable),size=as.factor(ResponseVariable)))+
   geom_hline(yintercept=0,linetype="dashed")+ geom_vline(xintercept=0, linetype="dashed")+
   geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 1.5, height = .5,position=position_jitter(h=0.05,w=0.05))+
   geom_errorbar(aes(ymin=lowerinterval_div,ymax=upperinterval_div), size = 1.5,position=position_jitter(h=0.05,w=0.05))+
@@ -1792,7 +1780,7 @@ Fire1yr<-ggplot(data=subset(Abund_Div_Image_1yr,Treatment_Category=="1yr"),aes(x
   annotate("text", x=-1.7, y=5, label = "A. 1 year fire return interval", size=20)
 
 #2-4 yr
-Fire2_4yr<-ggplot(data=subset(Abund_Div_Image_2_4yr,Treatment_Category=="2-4yr"),aes(x=Mean_ab, y=Mean_div,shape=ResponseVariable,colour=ResponseVariable,size=ResponseVariable))+
+Fire2_4yr<-ggplot(data=subset(Abund_Div_Image,Treatment_Category=="2-4yr"),aes(x=Mean_ab, y=Mean_div,shape=ResponseVariable,colour=ResponseVariable,size=ResponseVariable))+
   geom_hline(yintercept=0,linetype="dashed")+ geom_vline(xintercept=0, linetype="dashed")+
   geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 1.5, height = .5,position=position_jitter(h=0.05,w=0.05))+
   geom_errorbar(aes(ymin=lowerinterval_div,ymax=upperinterval_div), size = 1.5,position=position_jitter(h=0.05,w=0.05))+
@@ -1809,7 +1797,7 @@ Fire2_4yr<-ggplot(data=subset(Abund_Div_Image_2_4yr,Treatment_Category=="2-4yr")
 
 
 #Fire+grazing
-Fire_Grazing<-ggplot(data=subset(Abund_Div_Image_fire_grazing,Treatment_Category=="fire + grazing"),aes(x=Mean_ab, y=Mean_div,shape=ResponseVariable,colour=ResponseVariable,size=ResponseVariable))+
+Fire_Grazing<-ggplot(data=subset(Abund_Div_Image,Treatment_Category=="fire + grazing"),aes(x=Mean_ab, y=Mean_div,shape=ResponseVariable,colour=ResponseVariable,size=ResponseVariable))+
   geom_hline(yintercept=0,linetype="dashed")+ geom_vline(xintercept=0, linetype="dashed")+
   geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 1.5, height = .5,position=position_jitter(h=0.05,w=0.05))+
   geom_errorbar(aes(ymin=lowerinterval_div,ymax=upperinterval_div), size = 1.5,position=position_jitter(h=0.05,w=0.05))+
