@@ -1756,6 +1756,7 @@ ResponseVariable_Images<-Abund_Div %>%
                           "https://img.icons8.com/external-bearicons-glyph-bearicons/256/external-Carbon-periodic-table-bearicons-glyph-bearicons.png",
                           "https://img.icons8.com/external-bearicons-glyph-bearicons/256/external-Nitrogen-periodic-table-bearicons-glyph-bearicons.png"))
 
+
 Abund_Div_Image<-Abund_Div %>% 
   left_join(ResponseVariable_Images) %>% 
   select(ResponseVariable,Treatment_Category,Mean_ab,lowerinterval_ab,upperinterval_ab,Mean_div, lowerinterval_div, upperinterval_div,image)
@@ -1820,7 +1821,7 @@ Fire_Grazing<-ggplot(data=subset(Abund_Div_Image_fire_grazing,Treatment_Category
   scale_size_manual(values=c(0.07,0.07,0.04,0.06,0.06,0.05),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable",limits=c('Arthropod','Bird','Plant','SmallMammal','TotalSoilCarbon','TotalSoilNitrogen'))+
   xlab("LnRR of Abundance")+
   ylab("LnRR of Diversity")+
-  theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position = "none")+
+  theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position="none")+
   annotate("text", x=-7, y=5, label = "C. Fire & Grazing", size=20)
 
 #Create 3 paneled graph
@@ -1876,7 +1877,7 @@ Fire_Grazing_DivAb<-ggplot(data=subset(Abund_Div_Image,Treatment_Category=="fire
   #scale_color_manual(values=cbPalette,labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
   xlab("LnRR of Diversity")+
   ylab("LnRR of Abundance")+
-  theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position = "none")+
+  theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position = c(-1,-1))+
   annotate("text", x=-1.7, y=4, label = "C. Fire & Grazing", size=20)
 
 #Create 3 paneled graph
@@ -2126,3 +2127,13 @@ print(SmallMammal_Map,vp=viewport(layout.pos.row=2, layout.pos.col =1))
 print(TotalSoilCarbon_Map,vp=viewport(layout.pos.row=2, layout.pos.col =2))
 print(TotalSoilNitrogen_Map,vp=viewport(layout.pos.row=2, layout.pos.col =3))
 #Save at 4000 x 1500 
+
+
+
+#### get images to make legend ####
+ggplot(data=data.frame,aes(x=ResponseVariable,y=number,shape=as.factor(ResponseVariable),colour=as.factor(ResponseVariable),size=as.factor(ResponseVariable)))+
+  geom_image(aes(image=image))+
+  scale_color_manual(values=c("gold","royalblue4","palegreen4","tan4","gray57","powderblue"),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
+  scale_shape_manual(values=c(15,16,17,21,22,24),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
+  scale_size_manual(values=c(0.1,0.1,0.1,0.1,0.1,0.1),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
+  ylim(c(0,10))
