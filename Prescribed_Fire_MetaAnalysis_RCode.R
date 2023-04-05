@@ -1726,19 +1726,34 @@ ggplot(Plant_Abundance_Biomass_Taxa_Avg, aes(x = Treatment_Category, y = Mean)) 
 Abund_Div<-RR_Calc_Avg %>% 
   spread(key=Data_Type,value=Mean, fill=0)
 
-Abund_Div<-RR_Calc %>% 
+Abund_Div_Setup<-RR_Calc %>% 
   select(PDF_Study_ID,Study_Point,Treatment_Category, ResponseVariable,Data_Type,LnRR) %>% 
-  spread(key=Data_Type,value=LnRR, fill=NA) %>%
+  spread(key=Data_Type,value=LnRR, fill=NA) 
+
+Abund_Div_Abundance<-Abund_Div_Setup %>% 
+  select(-diversity) %>% 
+  na.omit(abundance) %>% 
   group_by(ResponseVariable, Treatment_Category) %>%
-  summarize(std_ab=sd(abundance,na.rm=TRUE),Mean_ab=mean(abundance,na.rm=TRUE),n_ab=length(abundance),std_div=sd(diversity,na.rm=TRUE),Mean_div=mean(diversity,na.rm=TRUE),n_div=length(diversity)) %>%
-  mutate(St_Error_div=std_div/sqrt(n_div),St_Error_ab=std_ab/sqrt(n_ab)) %>% 
-  mutate(margin_ab=qt(0.975,df=n_ab-1)*Mean_ab/sqrt(n_ab)) %>% 
-  mutate(margin_div=qt(0.975,df=n_div-1)*Mean_div/sqrt(n_div)) %>% 
+  summarize(std_ab=sd(abundance,na.rm=TRUE),Mean_ab=mean(abundance,na.rm=TRUE),n_ab=length(abundance)) %>%
+  mutate(St_Error_ab=std_ab/sqrt(n_ab)) %>% 
+  mutate(margin_ab=qt(0.975,df=n_ab-1)*Mean_ab/sqrt(n_ab)) %>%  
   mutate(lowerinterval_ab=Mean_ab-margin_ab) %>% 
   mutate(upperinterval_ab=Mean_ab+margin_ab) %>% 
+  ungroup() 
+
+Abund_Div_Diversity<-Abund_Div_Setup %>% 
+  select(-abundance) %>% 
+  na.omit(diversity) %>% 
+  group_by(ResponseVariable, Treatment_Category) %>%
+  summarize(std_div=sd(diversity,na.rm=TRUE),Mean_div=mean(diversity,na.rm=TRUE),n_div=length(diversity)) %>%
+  mutate(St_Error_div=std_div/sqrt(n_div)) %>%  
+  mutate(margin_div=qt(0.975,df=n_div-1)*Mean_div/sqrt(n_div)) %>% 
   mutate(lowerinterval_div=Mean_div-margin_div) %>% 
   mutate(upperinterval_div=Mean_div+margin_div) %>% 
   ungroup() 
+
+Abund_Div<-Abund_Div_Abundance %>% 
+  left_join(Abund_Div_Diversity)
 
 Abund_Div[is.na(Abund_Div)] <- 0
 
@@ -1769,15 +1784,15 @@ Fire1yr<-ggplot(data=subset(Abund_Div_Image,Treatment_Category=="1yr"),aes(x=Mea
   geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 1.5, height = .5,position=position_jitter(h=0.05,w=0.05))+
   geom_errorbar(aes(ymin=lowerinterval_div,ymax=upperinterval_div), size = 1.5,position=position_jitter(h=0.05,w=0.05))+
   geom_image(aes(image=image))+
-  xlim(-5,5)+
-  ylim(-5,5)+
-  scale_color_manual(values=c("gold","royalblue4","palegreen4","tan4","gray57","powderblue"),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
+  scale_color_manual(values=c("gold","royalblue4","palegreen4","tan4","gray57","cadetblue"),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
   scale_shape_manual(values=c(15,16,17,21,22,24),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
   scale_size_manual(values=c(0.07,0.07,0.07,0.07,0.065,0.065),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
   xlab("LnRR of Abundance")+
   ylab("LnRR of Diversity")+
   theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_text(size=55),axis.title.x=element_text(size=55),legend.position = "none")+
-  annotate("text", x=-1.7, y=5, label = "A. 1 year fire return interval", size=20)
+  xlim(-5,5)+
+  ylim(-40,40)+
+  annotate("text", x=-0.8, y=40, label = "A. 1 year fire return interval", size=20)
 
 #2-4 yr
 Fire2_4yr<-ggplot(data=subset(Abund_Div_Image,Treatment_Category=="2-4yr"),aes(x=Mean_ab, y=Mean_div,shape=ResponseVariable,colour=ResponseVariable,size=ResponseVariable))+
@@ -1785,15 +1800,15 @@ Fire2_4yr<-ggplot(data=subset(Abund_Div_Image,Treatment_Category=="2-4yr"),aes(x
   geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 1.5, height = .5,position=position_jitter(h=0.05,w=0.05))+
   geom_errorbar(aes(ymin=lowerinterval_div,ymax=upperinterval_div), size = 1.5,position=position_jitter(h=0.05,w=0.05))+
   geom_image(aes(image=image))+
-  xlim(-7.5,7.5)+
-  ylim(-5,5)+
-  scale_color_manual(values=c("gold","royalblue4","palegreen4","tan4","gray57","powderblue"),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
+  scale_color_manual(values=c("gold","royalblue4","palegreen4","tan4","gray57","cadetblue"),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
   scale_shape_manual(values=c(15,16,17,21,22,24),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  scale_size_manual(values=c(0.06,0.07,0.05,0.06,0.06,0.06),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
+  scale_size_manual(values=c(0.07,0.07,0.05,0.06,0.06,0.06),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
   xlab("LnRR of Abundance")+
   ylab("LnRR of Diversity")+
-  theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position = "none")+
-  annotate("text", x=-2.0, y=5, label = "B. 2-4 year fire return interval", size=20)
+  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position = "none")+
+  xlim(-7.5,7.5)+
+  ylim(-5,5)+
+  annotate("text", x=-1, y=5, label = "B. 2-4 year fire return interval", size=20)
 
 
 #Fire+grazing
@@ -1802,15 +1817,15 @@ Fire_Grazing<-ggplot(data=subset(Abund_Div_Image,Treatment_Category=="fire + gra
   geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 1.5, height = .5,position=position_jitter(h=0.05,w=0.05))+
   geom_errorbar(aes(ymin=lowerinterval_div,ymax=upperinterval_div), size = 1.5,position=position_jitter(h=0.05,w=0.05))+
   geom_image(aes(image=image))+
-  xlim(-17.5,17.5)+
-  ylim(-5,5)+
-  scale_color_manual(values=c("gold","royalblue4","palegreen4","tan4","gray57","powderblue"),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable",limits=c('Arthropod','Bird','Plant','SmallMammal','TotalSoilCarbon','TotalSoilNitrogen'))+
+  scale_color_manual(values=c("gold","royalblue4","palegreen4","tan4","gray57","cadetblue"),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable",limits=c('Arthropod','Bird','Plant','SmallMammal','TotalSoilCarbon','TotalSoilNitrogen'))+
   scale_shape_manual(values=c(15,16,17,21,22,24),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  scale_size_manual(values=c(0.07,0.07,0.04,0.06,0.06,0.05),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable",limits=c('Arthropod','Bird','Plant','SmallMammal','TotalSoilCarbon','TotalSoilNitrogen'))+
+  scale_size_manual(values=c(0.07,0.07,0.05,0.06,0.06,0.05),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable",limits=c('Arthropod','Bird','Plant','SmallMammal','TotalSoilCarbon','TotalSoilNitrogen'))+
   xlab("LnRR of Abundance")+
   ylab("LnRR of Diversity")+
-  theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position="none")+
-  annotate("text", x=-7, y=5, label = "C. Fire & Grazing", size=20)
+  xlim(-20,20)+
+  ylim(-5,5)+
+  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position="none")+
+  annotate("text", x=-10, y=5, label = "C. Fire & Grazing", size=20)
 
 #Create 3 paneled graph
 pushViewport(viewport(layout=grid.layout(1,3)))
@@ -2121,7 +2136,7 @@ print(TotalSoilNitrogen_Map,vp=viewport(layout.pos.row=2, layout.pos.col =3))
 #### get images to make legend ####
 ggplot(data=data.frame,aes(x=ResponseVariable,y=number,shape=as.factor(ResponseVariable),colour=as.factor(ResponseVariable),size=as.factor(ResponseVariable)))+
   geom_image(aes(image=image))+
-  scale_color_manual(values=c("gold","royalblue4","palegreen4","tan4","gray57","powderblue"),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
+  scale_color_manual(values=c("gold","royalblue4","palegreen4","tan4","gray57","cadetblue"),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
   scale_shape_manual(values=c(15,16,17,21,22,24),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
   scale_size_manual(values=c(0.1,0.1,0.1,0.1,0.1,0.1),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
   ylim(c(0,10))
