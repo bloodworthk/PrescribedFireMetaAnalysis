@@ -1764,9 +1764,9 @@ cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00")
 ResponseVariable_Images<-Abund_Div %>% 
   select(ResponseVariable) %>% 
   unique() %>% 
-  mutate(image = c("https://pixabay.com/get/g90ec38f1304468005532be685949ee83b40b76899a4f5b776c93e43e4c6673b9c406955d830d9c8326074d64223d7cf8.svg", #arthropod
-                          "https://pixabay.com/get/g3cacc1ebebce7aef2b5985dab13f6757c0526414f163d10c58d5ad37c970f5fba72c192558cc02d4df8f394047b9b5da.svg", #bird
-                          "https://pixabay.com/get/g553e8bfd1961afb51962dc1e3828fa1ec4bf30848095d775a5be0a5fb4def4eaebd4172df47fbb03a484fde31017bbc9.svg", #plant
+  mutate(image = c("https://pixabay.com/get/gabecfb759fd89ff80ee69547d78e0c9309da1147cf5436acbde5d27e0817c1b2a491bb40b5c126393e117ed92c0ed92a_640.png", #arthropod
+                          "https://pixabay.com/get/gded36c96b4f4241c32a5d98b9debbdbdb5ebebbfc7bbe5fec72b1af1522112f7b829ddf2880ab8961ec0a46e320ef3af762499612753702fe6e554118da0f0a0_1920.png", #bird
+                          "https://pixabay.com/get/geaf5245a71b727c41fcf0b3c9d9586da8640f221232362bc46865a80e4c710d4249affe3d358c9ca543eff4c8b905e43_640.png", #plant
                           "https://pixabay.com/get/gd5439c75f55421299cf657c8d25b8367e0102e941a3ab7cef51a9d71f86a9cc56b581aae3a2ab0727a92c4157723dc5d_640.png", #small Mammal
                           "https://pixabay.com/get/g080314708fe1c54beacf6ca4c1268e315e65876a9ebc8fd0996f6bcaad4cd73997e7cc80093463dd33d15d0b85d274f8.svg",
                           "https://img.icons8.com/external-bearicons-glyph-bearicons/256/external-Nitrogen-periodic-table-bearicons-glyph-bearicons.png"))
@@ -1788,103 +1788,86 @@ Abund_Div_Image_Abiotic<-Abund_Div_Image %>%
 
 #### Diversity and Abundance Separately ####
 
-Fire1yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="1yr"),aes(x=Mean_ab, y=ResponseVariable,shape=ResponseVariable,color=ResponseVariable)) +
+Fire1yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="1yr"),aes(x=Mean_ab, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
-  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 2, height = 0.5)+
-  geom_point(aes(x=Mean_ab),size=10)+
-  #geom_image(aes(image=image),position=jitter())+
-  scale_shape_manual(values=c(15,16,17,18,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 2, height = 0)+
+  geom_image(aes(image=image))+
+  scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_y_discrete(labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_color_manual(values=c("#fed706","#213c8f","#3f8c4c","#935721","orange"),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  #scale_size_manual(values=c(0.2,0.2,0.2,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_size_manual(values=c(0.2,0.2,0.2,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Abundance")+
   ylab("Response Variable")+
-  #xlim(-35,35)+
-  scale_x_continuous(limits=c(-35,35),breaks=seq(-35,35, by=5))+
-  theme(axis.text.y=element_text(size=55),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
-  annotate("text", x=-29, y=5, label = "A. Annual Fire", size=20)
+  xlim(-5,5)+
+  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
+  annotate("text", x=-3, y=5, label = "A.Annual Fire", size=20)
 
-Fire2_4yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="2-4yr"),aes(x=Mean_ab, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable,color=ResponseVariable)) +
+Fire2_4yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="2-4yr"),aes(x=Mean_ab, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
-  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 3, height = 0.5)+
-  geom_point(aes(x=Mean_ab),size=10)+
-  #geom_image(aes(image=image),position=jitter())+
-  scale_shape_manual(values=c(15,16,17,18,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 3, height = 0)+
+  geom_image(aes(image=image))+
+  scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_y_discrete(labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_color_manual(values=c("#fed706","#213c8f","#3f8c4c","#935721","orange"),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  #scale_size_manual(values=c(0.2,0.2,0.2,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_size_manual(values=c(0.2,0.1,0.2,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Abundance")+
   ylab("Response Variable")+
-  #xlim(-35,35)+
-  scale_x_continuous(limits=c(-35,35),breaks=seq(-35,35, by=5))+
-  theme(axis.text.y=element_text(size=55),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
-  annotate("text", x=-23, y=5, label = "C. 2-4 Year Fire Regime", size=20)
+  xlim(-10,10)+
+  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
+  annotate("text", x=-2.5, y=5, label = "C.2-4 Year Fire Regime", size=20)
 
 
-FireGrazing_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="fire + grazing"),aes(x=Mean_ab, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable,color=ResponseVariable)) +
+FireGrazing_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="fire + grazing"),aes(x=Mean_ab, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
-  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 2, height = .5)+
-  geom_point(aes(x=Mean_ab),size=10)+
-  #geom_image(aes(image=image),position=jitter())+
-  scale_shape_manual(values=c(15,16,17,18,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 2, height = .4)+
+  geom_image(aes(image=image))+
+  scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_y_discrete(labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_color_manual(values=c("#fed706","#213c8f","#3f8c4c","#935721","orange"),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  #scale_size_manual(values=c(0.2,0.2,0.2,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_size_manual(values=c(0.1,0.1,0.1,0.1,0.1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Abundance")+
   ylab("Response Variable")+
-  #xlim(-35,35)+
-  scale_x_continuous(limits=c(-35,35),breaks=seq(-35,35, by=5))+
+  xlim(-1,1)+
   theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position="none")+
-  annotate("text", x=-26, y=5, label = "E. Fire and Grazing", size=20)
+  annotate("text", x=-0.4, y=5, label = "E. Fire and Grazing", size=20)
 
-Fire1yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="1yr"),aes(x=Mean_div, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable,color=ResponseVariable)) +
+Fire1yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="1yr"),aes(x=Mean_div, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
-  geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 2, height = .5)+
-  geom_point(aes(x=Mean_div),size=10)+
-  #geom_image(aes(image=image),position=jitter())+
-  scale_shape_manual(values=c(15,16,17,18,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 2, height = .4)+
+  geom_image(aes(image=image))+
+  scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_y_discrete(labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_color_manual(values=c("#fed706","#213c8f","#3f8c4c","#935721","orange"),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  #scale_size_manual(values=c(0.2,0.2,0.2,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_size_manual(values=c(0.1,0.1,0.1,0.1,0.1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Diversity")+
   ylab("Response Variable")+
-  #xlim(-35,35)+
-  scale_x_continuous(limits=c(-35,35),breaks=seq(-35,35, by=5))+
-  theme(axis.text.y=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
-  annotate("text", x=-29, y=5, label = "B. Annual Fire", size=20)
+  xlim(-40,40)+
+  theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
+  annotate("text", x=-24, y=5, label = "B.Annual Fire", size=20)
 
-Fire2_4yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="2-4yr"),aes(x=Mean_div, y=ResponseVariable,shape=ResponseVariable, size=ResponseVariable,color=ResponseVariable)) +
+Fire2_4yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="2-4yr"),aes(x=Mean_div, y=ResponseVariable,shape=ResponseVariable, size=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
-  geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 2, height = .5)+
-  geom_point(aes(x=Mean_div),size=10)+
-  #geom_image(aes(image=image),position=jitter())+
-  scale_shape_manual(values=c(15,16,17,18,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 2, height = .4)+
+  geom_image(aes(image=image))+
+  scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_y_discrete(labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_color_manual(values=c("#fed706","#213c8f","#3f8c4c","#935721","orange"),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  #scale_size_manual(values=c(0.2,0.2,0.2,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_size_manual(values=c(0.1,0.1,0.1,0.1,0.1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Diversity")+
   ylab("Response Variable")+
-  #xlim(-35,35)+
-  scale_x_continuous(limits=c(-35,35),breaks=seq(-35,35, by=5))+
-  theme(axis.text.y=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
-  annotate("text", x=-23, y=5, label = "D. 2-4 Year Fire Regime", size=20)
+  xlim(-3,3)+
+  theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
+  annotate("text", x=-0.7, y=5, label = "D.2-4 Year Fire Regime", size=20)
 
 
-FireGrazing_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="fire + grazing"),aes(x=Mean_div, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable,color=ResponseVariable)) +
+FireGrazing_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="fire + grazing"),aes(x=Mean_div, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
-  geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 2, height = 0.5)+
-  geom_point(aes(x=Mean_div),size=10)+
-  #geom_image(aes(image=image),position=jitter())+
-  scale_shape_manual(values=c(15,16,17,18,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 2, height = 0)+
+  geom_image(aes(image=image))+
+  geom_jitter()+
+  scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_y_discrete(labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_color_manual(values=c("#fed706","#213c8f","#3f8c4c","#935721","orange"),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  #scale_size_manual(values=c(0.2,0.2,0.2,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_size_manual(values=c(0.1,0.1,0.1,0.1,0.1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Diversity")+
   ylab("Response Variable")+
-  #xlim(-35,35)+
-  scale_x_continuous(limits=c(-35,35),breaks=seq(-35,35, by=5))+
+  xlim(-3,3)+
   theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position="none")+
-  annotate("text", x=-26, y=5, label = "F. Fire and Grazing", size=20)
+  annotate("text", x=-1.2, y=5, label = "F. Fire and Grazing", size=20)
 
 
 Fire1yr_Abundance+
@@ -1893,7 +1876,8 @@ Fire1yr_Abundance+
   Fire2_4yr_Diversity+
   FireGrazing_Abundance+
   FireGrazing_Diversity+ 
-  plot_layout(ncol = 2,nrow = 3)#save at 5000 x 2000
+  plot_layout(ncol = 2,nrow = 3)#save at 2500 x 1800
+
 
 ###not using 
 
