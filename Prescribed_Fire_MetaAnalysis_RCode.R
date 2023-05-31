@@ -1799,9 +1799,10 @@ Fire1yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=
   #scale_size_manual(values=c(0.2,0.2,0.2,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Abundance")+
   ylab("Response Variable")+
-  xlim(-5,5)+
-  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
-  annotate("text", x=-2.5, y=5, label = "A. Annual Fire", size=20)
+  #xlim(-35,35)+
+  scale_x_continuous(limits=c(-35,35),breaks=seq(-35,35, by=5))+
+  theme(axis.text.y=element_text(size=55),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
+  annotate("text", x=-29, y=5, label = "A. Annual Fire", size=20)
 
 Fire2_4yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="2-4yr"),aes(x=Mean_ab, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable,color=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
@@ -1814,9 +1815,10 @@ Fire2_4yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categor
   #scale_size_manual(values=c(0.2,0.2,0.2,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Abundance")+
   ylab("Response Variable")+
-  xlim(-10,10)+
-  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
-  annotate("text", x=-1.4, y=5, label = "C. 2-4 Year Fire Regime", size=20)
+  #xlim(-35,35)+
+  scale_x_continuous(limits=c(-35,35),breaks=seq(-35,35, by=5))+
+  theme(axis.text.y=element_text(size=55),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
+  annotate("text", x=-23, y=5, label = "C. 2-4 Year Fire Regime", size=20)
 
 
 FireGrazing_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="fire + grazing"),aes(x=Mean_ab, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable,color=ResponseVariable)) +
@@ -1830,9 +1832,10 @@ FireGrazing_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categ
   #scale_size_manual(values=c(0.2,0.2,0.2,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Abundance")+
   ylab("Response Variable")+
-  xlim(-1,1)+
+  #xlim(-35,35)+
+  scale_x_continuous(limits=c(-35,35),breaks=seq(-35,35, by=5))+
   theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position="none")+
-  annotate("text", x=-0.3, y=5, label = "E. Fire and Grazing", size=20)
+  annotate("text", x=-26, y=5, label = "E. Fire and Grazing", size=20)
 
 Fire1yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="1yr"),aes(x=Mean_div, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable,color=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
@@ -1845,9 +1848,10 @@ Fire1yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=
   #scale_size_manual(values=c(0.2,0.2,0.2,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Diversity")+
   ylab("Response Variable")+
-  xlim(-40,40)+
-  theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
-  annotate("text", x=-21, y=5, label = "B. Annual Fire", size=20)
+  #xlim(-35,35)+
+  scale_x_continuous(limits=c(-35,35),breaks=seq(-35,35, by=5))+
+  theme(axis.text.y=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
+  annotate("text", x=-29, y=5, label = "B. Annual Fire", size=20)
 
 Fire2_4yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="2-4yr"),aes(x=Mean_div, y=ResponseVariable,shape=ResponseVariable, size=ResponseVariable,color=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
@@ -1860,9 +1864,10 @@ Fire2_4yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categor
   #scale_size_manual(values=c(0.2,0.2,0.2,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Diversity")+
   ylab("Response Variable")+
-  xlim(-3,3)+
-  theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
-  annotate("text", x=-0.4, y=5, label = "D. 2-4 Year Fire Regime", size=20)
+  #xlim(-35,35)+
+  scale_x_continuous(limits=c(-35,35),breaks=seq(-35,35, by=5))+
+  theme(axis.text.y=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
+  annotate("text", x=-23, y=5, label = "D. 2-4 Year Fire Regime", size=20)
 
 
 FireGrazing_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="fire + grazing"),aes(x=Mean_div, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable,color=ResponseVariable)) +
@@ -1876,9 +1881,10 @@ FireGrazing_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categ
   #scale_size_manual(values=c(0.2,0.2,0.2,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Diversity")+
   ylab("Response Variable")+
-  xlim(-3,3)+
+  #xlim(-35,35)+
+  scale_x_continuous(limits=c(-35,35),breaks=seq(-35,35, by=5))+
   theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position="none")+
-  annotate("text", x=-1, y=5, label = "F. Fire and Grazing", size=20)
+  annotate("text", x=-26, y=5, label = "F. Fire and Grazing", size=20)
 
 
 Fire1yr_Abundance+
@@ -1887,7 +1893,7 @@ Fire1yr_Abundance+
   Fire2_4yr_Diversity+
   FireGrazing_Abundance+
   FireGrazing_Diversity+ 
-  plot_layout(ncol = 2,nrow = 3)#save at 2500 x 1800
+  plot_layout(ncol = 2,nrow = 3)#save at 5000 x 2000
 
 ###not using 
 
