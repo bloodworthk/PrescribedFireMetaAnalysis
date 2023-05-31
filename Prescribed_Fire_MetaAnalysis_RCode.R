@@ -960,7 +960,7 @@ FireGrazing_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categ
   ylab("Response Variable")+
   xlim(-1,1)+
   theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position="none")+
-  annotate("text", x=-0.4, y=5, label = "E. Fire and Grazing", size=20)
+  annotate("text", x=-0.4, y=5, label = "E. Fire with Grazing", size=20)
 
 Fire1yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="1yr"),aes(x=Mean_div, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
@@ -1000,7 +1000,7 @@ FireGrazing_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categ
   ylab("Response Variable")+
   xlim(-3,3)+
   theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position="none")+
-  annotate("text", x=-1.2, y=5, label = "F. Fire and Grazing", size=20)
+  annotate("text", x=-1.2, y=5, label = "F. Fire with Grazing", size=20)
 
 
 Fire1yr_Abundance+
