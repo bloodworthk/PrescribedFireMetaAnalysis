@@ -865,6 +865,9 @@ Abund_Div_Setup<-RR_Calc %>%
   select(PDF_Study_ID,Study_Point,Treatment_Category, ResponseVariable,Data_Type,LnRR) %>% 
   spread(key=Data_Type,value=LnRR, fill=NA) 
 
+SoilNutrients<-Abund_Div_Setup %>% 
+  filter(ResponseVariable!="Arthropod"& ResponseVariable!="Bird" & ResponseVariable!="Plant"& ResponseVariable!="SmallMammal")
+
 Abund_Div_Abundance<-Abund_Div_Setup %>% 
   select(-diversity) %>% 
   na.omit(abundance) %>% 
@@ -917,7 +920,7 @@ Abund_Div_Image_Biotic<-Abund_Div_Image %>%
 Abund_Div_Image_Abiotic<-Abund_Div_Image %>% 
   filter(ResponseVariable!="Arthropod"& ResponseVariable!="Bird" & ResponseVariable!="Plant"& ResponseVariable!="SmallMammal")
 
-#### Diversity and Abundance Separately ####
+#### Diversity and Abundance Figure ####
 
 Fire1yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="1yr"),aes(x=Mean_ab, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
@@ -995,7 +998,7 @@ FireGrazing_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categ
   scale_size_manual(values=c(0.2,0.1,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Diversity")+
   ylab("Response Variable")+
-  xlim(-3,===3)+
+  xlim(-3,3)+
   theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position="none")+
   annotate("text", x=-1.2, y=5, label = "F. Fire and Grazing", size=20)
 
@@ -1009,308 +1012,18 @@ Fire1yr_Abundance+
   plot_layout(ncol = 2,nrow = 3)#save at 2500 x 1800
 
 
-###not using 
+#### Soil Nutrients Figure ####
 
-#Diversity * Abundance each fire return interval individually
-#1 yr
-Fire1yr_DivAb<-ggplot(data=subset(Abund_Div_Image,Treatment_Category=="1yr"),aes(x=Mean_div, y=Mean_ab,shape=ResponseVariable))+
-  geom_image(aes(image=image))+
-  xlim(-4,4)+
+ggplot(data=SoilNutrients, aes(x=Treatment_Category,y=abundance,color=ResponseVariable)) +
+  geom_hline(yintercept=0, linetype="dashed")+
+  geom_boxplot(lwd=2,position=position_dodge(1))+
+  scale_color_manual(values=c("#a3e2e8","#919191"),labels = c("Total Soil Nitrogen","Total Soil Carbon"), breaks = c("TotalSoilNitrogen","TotalSoilCarbon"),limits=c("TotalSoilNitrogen","TotalSoilCarbon"),name="Soil Nutrients")+
+  scale_x_discrete(labels = c("Annual Fire","2-4 Year Fire","Fire with Grazing"), breaks = c("1yr","2-4yr","fire + grazing"))+
+  ylab("LnRR")+
+  xlab("Fire Return Interval")+
   ylim(-4,4)+
-  geom_hline(yintercept=0)+geom_vline(xintercept=0)+
-  geom_errorbar(aes(ymin=lowerinterval_ab,ymax=upperinterval_ab), size = 1)+
-  geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 1, height = .5)+
-  scale_shape_manual(values=c(15,16,17,21,22,24),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  #scale_color_manual(values=cbPalette,labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  xlab("LnRR of Diversity")+
-  ylab("LnRR of Abundance")+
-  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_text(size=55),axis.title.x=element_text(size=55),legend.position = "none")+
-  annotate("text", x=-0.6, y=4, label = "A. 1 year Fire Return", size=20)
-
-#2-4 yr
-Fire2_4yr_DivAb<-ggplot(data=subset(Abund_Div_Image,Treatment_Category=="2-4yr"),aes(x=Mean_div, y=Mean_ab,shape=ResponseVariable))+
-  geom_image(aes(image=image))+
-  xlim(-4,4)+
-  ylim(-4,4)+
-  geom_hline(yintercept=0)+geom_vline(xintercept=0)+
-  geom_errorbar(aes(ymin=lowerinterval_ab,ymax=upperinterval_ab), size = 1)+
-  geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 1, height = .5)+
-  scale_shape_manual(values=c(15,16,17,21,22,24),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  #scale_color_manual(values=cbPalette,labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  xlab("LnRR of Diversity")+
-  ylab("LnRR of Abundance")+
-  theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position = c(0.7,0.2))+
-  annotate("text", x=-0.9, y=4, label = "B. 2-4 year Fire Return", size=20)
-
-#Fire+grazing
-Fire_Grazing_DivAb<-ggplot(data=subset(Abund_Div_Image,Treatment_Category=="fire + grazing"),aes(x=Mean_div, y=Mean_ab,shape=ResponseVariable))+
-  geom_image(aes(image=image))+
-  xlim(-4,4)+
-  ylim(-4,4)+
-  geom_hline(yintercept=0)+geom_vline(xintercept=0)+
-  geom_errorbar(aes(ymin=lowerinterval_ab,ymax=upperinterval_ab), size = 1)+
-  geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 1, height = .5)+
-  scale_shape_manual(values=c(15,16,17,21,22,24),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  #scale_color_manual(values=cbPalette,labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  xlab("LnRR of Diversity")+
-  ylab("LnRR of Abundance")+
-  theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position = c(-1,-1))+
-  annotate("text", x=-1.7, y=4, label = "C. Fire & Grazing", size=20)
-
-#Create 3 paneled graph
-pushViewport(viewport(layout=grid.layout(1,3)))
-print(Fire1yr_DivAb,vp=viewport(layout.pos.row=1, layout.pos.col =1))
-print(Fire2_4yr_DivAb,vp=viewport(layout.pos.row=1, layout.pos.col =2))
-print(Fire_Grazing_DivAb,vp=viewport(layout.pos.row=1, layout.pos.col =3))
-#Save at 4000 x 1500  
-
-
-#### Linear Regression Models (lat instead of long)
-
-#Create function for linear regression
-linreg = function (formula) {
-  m=lm(formula)
-  list(slope=coefficients(m)[2], intercept=coefficients(m)[1], adj.r2=summary(m)$adj.r.squared, f=summary(m)$fstatistic[1],p.val=summary(m)$coefficients[2,4])
-}
-
-### Regression - Plants 
-#Look at abundance of Plants
-#create data table of plant abundance
-RR_Plant_Abundance<-data.table(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
-
-#linreg is x by y
-Abundance_Plants_regression <- RR_Plant_Abundance[,linreg(Latitude~LnRR),by=Treatment_Category]
-Abundance_Plants_regression #negative r2 means so much spread that there is no trend (could be nice)
-#negative R2 for 1 yr
-#positive R2 for 2-4 yr & fire+grazing
-#significant for 2-4 yr
-
-#Look at diversity of Plants
-#create data table of plant diversity
-RR_Plant_Diversity<-data.table(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
-
-#linreg is x by y
-Diversity_Plants_regression <- RR_Plant_Diversity[,linreg(Latitude~LnRR),by=Treatment_Category]
-Diversity_Plants_regression
-#positive R2 for all
-#marginally significant (0.09) for 2-4 year
-
-### Regression - Arthropods 
-#Look at abundance of Arthropods
-#create data table of Arthropods abundance
-RR_Arthropod_Abundance<-data.table(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
-
-#linreg is x by y
-Abundance_Arthropod_regression <- RR_Arthropod_Abundance[,linreg(Latitude~LnRR),by=Treatment_Category]
-Abundance_Arthropod_regression #negative r2 means so much spread that there is no trend (could be nice)
-#negative R2 for 1 yr and 2-4 year, NA for 1 year
-
-#Look at diversity of Arthropods
-#create data table of Arthropods diversity
-RR_Arthropod_Diversity<-data.table(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
-
-#linreg is x by y (doesnt work)
-Diversity_Arthropod_regression <- RR_Arthropod_Diversity[,linreg(Latitude~LnRR),by=Treatment_Category]
-Diversity_Arthropod_regression
-
-### Regression - Bird 
-#Look at abundance of Bird
-#create data table of Bird abundance
-RR_Bird_Abundance<-data.table(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="abundance"))
-
-#linreg is x by y
-Abundance_Bird_regression <- RR_Bird_Abundance[,linreg(Latitude~LnRR),by=Treatment_Category]
-Abundance_Bird_regression #doesnt work
-
-#Look at diversity of Birds
-#create data table of Birds diversity
-RR_Bird_Diversity<-data.table(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="diversity"))
-
-#linreg is x by y (doesnt work)
-Diversity_Bird_regression <- RR_Bird_Diversity[,linreg(Latitude~LnRR),by=Treatment_Category]
-Diversity_Bird_regression #- R2 for 2-4 year
-
-### Regression - SmallMammal 
-#Look at abundance of SmallMammal
-#create data table of SmallMammal abundance
-RR_SmallMammal_Abundance<-data.table(subset(RR_Calc,ResponseVariable=="SmallMammal" & Data_Type=="abundance"))
-
-#linreg is x by y
-Abundance_SmallMammal_regression <- RR_SmallMammal_Abundance[,linreg(Latitude~LnRR),by=Treatment_Category]
-Abundance_SmallMammal_regression #-r2 for 1 yr, NA for 2-4yr
-
-### Regression - TotalSoilCarbon 
-#Look at abundance of TotalSoilCarbon
-#create data table of TotalSoilCarbon abundance
-RR_TotalSoilCarbon_Abundance<-data.table(subset(RR_Calc,ResponseVariable=="TotalSoilCarbon" & Data_Type=="abundance"))
-
-#linreg is x by y
-Abundance_TotalSoilCarbon_regression <- RR_TotalSoilCarbon_Abundance[,linreg(Latitude~LnRR),by=Treatment_Category]
-Abundance_TotalSoilCarbon_regression #doesnt work
-
-### Regression - TotalSoilNitrogen 
-#Look at abundance of TotalSoilNitrogen
-#create data table of TotalSoilNitrogen abundance
-RR_TotalSoilNitrogen_Abundance<-data.table(subset(RR_Calc,ResponseVariable=="TotalSoilNitrogen" & Data_Type=="abundance"))
-
-#linreg is x by y
-Abundance_TotalSoilNitrogen_regression <- RR_TotalSoilNitrogen_Abundance[,linreg(Latitude~LnRR),by=Treatment_Category]
-Abundance_TotalSoilNitrogen_regression #doesnt work
-
-#### Graphs of Regressions (by latitude) ##
-
-## Abundance 
-ggplot(data=subset(RR_Calc,Data_Type=="abundance"), aes(y=Latitude,x=LnRR,fill=Treatment_Category,color=Treatment_Category))+
-  geom_jitter(size=4)+
-  geom_smooth(data=subset(RR_Plant_Abundance,Treatment_Category=="2-4yr"),aes(y=Latitude,x=LnRR,fill=Treatment_Category,color=Treatment_Category),method="lm",se=FALSE)+
-  facet_wrap(~ResponseVariable)+
-  expand_limits(y=48)+
-  geom_vline(xintercept=0)
-#save at 2000 x 1000
-
-## Diversity
-ggplot(data=subset(RR_Calc,Data_Type=="diversity"), aes(y=Latitude,x=LnRR,fill=Treatment_Category,color=Treatment_Category))+
-  geom_jitter(size=4)+
-  geom_smooth(data=subset(RR_Plant_Abundance,Treatment_Category=="2-4yr"),aes(y=Latitude,x=LnRR,fill=Treatment_Category,color=Treatment_Category),method="lm",se=FALSE,linetype=2)+
-  facet_wrap(~ResponseVariable)+
-  expand_limits(y=48)+
-  geom_vline(xintercept=0)
-#save at 2000 x 1000
-
-#### Map of Study Locations ####
-
-Map_Dataframe<-RR_Calc %>% 
-  filter(Longitude!="" & Latitude!="") %>% 
-  mutate(ID=paste(PDF_Study_ID,Study_Point,sep = "_")) %>% 
-  select(ID,Longitude,Latitude,ResponseVariable,DataType)
-
-
-#map of big data extraction data points so far
-ggplot()+
-  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
-  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
-  borders("state",colour="black") +
-  xlim(-130,-65)+
-  geom_count(data=Map_Dataframe, mapping=aes(x=Longitude,y=Latitude,shape=DataType,color=ResponseVariable)) +  
-  scale_size_area(max_size=20,breaks=c(1,5,10,50,100,150,200))+
-  #scale_colour_manual(values=GeneralGrantpal)+
-  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
-  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
-  xlab(expression("Longitude "*degree*""))+
-  guides(colour = guide_legend(override.aes = list(size=10)))
-#export at 1500 x 1000
-
-
-#map of each response variable
-#Plants
-Plant_Map<-ggplot()+
-  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
-  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
-  borders("state",colour="black") +
-  xlim(-130,-65)+
-  geom_count(data=subset(Map_Dataframe,ResponseVariable=="Plant"), mapping=aes(x=Longitude,y=Latitude,shape=DataType,color=DataType)) + 
-  scale_size_area(max_size=20,breaks=c(1,5,10,50,100,150,200))+
-  #scale_colour_manual(values=GeneralGrantpal)+
-  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
-  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
-  xlab(expression("Longitude "*degree*""))+
-  theme(axis.text.y=element_text(size=55),axis.text.x=element_blank(),axis.title.y=element_text(size=55),axis.title.x=element_blank(),legend.position = c(0.9,0.7))+
-  annotate("text", x=-120, y=53, label = "A. Plants", size=20)+
-  guides(colour = guide_legend(override.aes = list(size=10)))
-
-#arthropods
-Arthropod_Map<-ggplot()+
-  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
-  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
-  borders("state",colour="black") +
-  xlim(-130,-65)+
-  geom_count(data=subset(Map_Dataframe,ResponseVariable=="Arthropod"), mapping=aes(x=Longitude,y=Latitude,shape=DataType,color=DataType)) +  #this is the dataframe of lat/long, and the points are being colored by num_codominants, with the point shape and size specified at the end fill=response variable 
-  scale_size_area(max_size=20,breaks=c(1,5,10,50,100,150,200))+
-  #scale_colour_manual(values=GeneralGrantpal)+
-  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
-  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
-  xlab(expression("Longitude "*degree*""))+ 
-  theme(axis.text.y=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position = c(0.9,0.7))+
-  annotate("text", x=-120, y=53, label = "B. Arthropods", size=20)
+  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_text(size=55),axis.title.x=element_text(size=55),legend.text=element_text(size=40),legend.title=element_blank(),legend.position = c(0.18,0.88),legend.key = element_rect(size=30), legend.key.size = unit(7.0, 'lines'))
+#save at 2000x1500
   
 
-#Birds
-Bird_Map<-ggplot()+
-  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
-  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
-  borders("state",colour="black") +
-  xlim(-130,-65)+
-  geom_count(data=subset(Map_Dataframe,ResponseVariable=="Bird"), mapping=aes(x=Longitude,y=Latitude,shape=DataType,color=DataType)) +  
-  scale_size_area(max_size=20,breaks=c(1,5,10,50,100,150,200))+
-  #scale_colour_manual(values=GeneralGrantpal)+
-  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
-  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
-  xlab(expression("Longitude "*degree*""))+
-  theme(axis.text.y=element_blank(),axis.text.x=element_blank(),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position = c(0.9,0.7))+
-  annotate("text", x=-120, y=53, label = "C. Birds", size=20)
 
-#SmallMammals
-SmallMammal_Map<-ggplot()+
-  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
-  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
-  borders("state",colour="black") +
-  xlim(-130,-65)+
-  geom_count(data=subset(Map_Dataframe,ResponseVariable=="SmallMammal"), mapping=aes(x=Longitude,y=Latitude,shape=DataType,color=DataType)) +  
-  scale_size_area(max_size=20,breaks=c(1,5,10,50,100,150,200))+
-  #scale_colour_manual(values=GeneralGrantpal)+
-  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
-  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
-  xlab(expression("Longitude "*degree*""))+
-  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_text(size=55),axis.title.x=element_text(size=55),legend.position = c(0.9,0.7))+
-  annotate("text", x=-120, y=53, label = "D. Small Mammals", size=20)
-
-
-#TotalSoilCarbon
-TotalSoilCarbon_Map<-ggplot()+
-  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
-  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
-  borders("state",colour="black") +
-  xlim(-130,-65)+
-  geom_count(data=subset(Map_Dataframe,ResponseVariable=="TotalSoilCarbon"), mapping=aes(x=Longitude,y=Latitude)) +  
-  scale_size_area(max_size=20,breaks=c(1,5,10,50,100,150,200))+
-  #scale_colour_manual(values=GeneralGrantpal)+
-  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
-  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
-  xlab(expression("Longitude "*degree*""))+
-  theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position = c(0.9,0.7))+
-  annotate("text", x=-120, y=53, label = "E. Total Soil Carbon", size=20)
-
-#TotalSoilNitrogen
-TotalSoilNitrogen_Map<-ggplot()+
-  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
-  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
-  borders("state",colour="black") +
-  xlim(-130,-65)+
-  geom_count(data=subset(Map_Dataframe,ResponseVariable=="TotalSoilNitrogen"), mapping=aes(x=Longitude,y=Latitude)) +
-scale_size_area(max_size=20,breaks=c(1,5,10,50,100,150,200))+
-  #scale_colour_manual(values=GeneralGrantpal)+
-  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
-  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
-  xlab(expression("Longitude "*degree*""))+
-  theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position = c(0.9,0.7))+
-  annotate("text", x=-120, y=53, label = "F. Total Soil Nitrogen", size=20)
-
-#Create 6 paneled graph
-pushViewport(viewport(layout=grid.layout(2,3)))
-print(Plant_Map,vp=viewport(layout.pos.row=1, layout.pos.col =1))
-print(Arthropod_Map,vp=viewport(layout.pos.row=1, layout.pos.col =2))
-print(Bird_Map,vp=viewport(layout.pos.row=1, layout.pos.col =3))
-print(SmallMammal_Map,vp=viewport(layout.pos.row=2, layout.pos.col =1))
-print(TotalSoilCarbon_Map,vp=viewport(layout.pos.row=2, layout.pos.col =2))
-print(TotalSoilNitrogen_Map,vp=viewport(layout.pos.row=2, layout.pos.col =3))
-#Save at 4000 x 1500 
-
-
-
-#### get images to make legend ####
-ggplot(data=data.frame,aes(x=ResponseVariable,y=number,shape=as.factor(ResponseVariable),colour=as.factor(ResponseVariable),size=as.factor(ResponseVariable)))+
-  geom_image(aes(image=image))+
-  scale_color_manual(values=c("gold","royalblue4","palegreen4","tan4","gray57","cadetblue"),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  scale_shape_manual(values=c(15,16,17,21,22,24),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  scale_size_manual(values=c(0.1,0.1,0.1,0.1,0.1,0.1),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  ylim(c(0,10))
