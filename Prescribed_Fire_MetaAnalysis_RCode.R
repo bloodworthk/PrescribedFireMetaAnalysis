@@ -720,22 +720,6 @@ Map_ResponseVariables_LatLong<-Map_ResponseVariables_Arth %>%
 write.csv(Map_ResponseVariables_LatLong, file = "Map_ResponseVariables_LatLong.csv")
 
 
-#map of locations of meta-analysis studies
-ggplot()+
-  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
-  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
-  geom_polygon(data = TGP_MapData_Canada, aes(x=long, y=lat, group = country.etc, fill = country.etc),fill="gray")+
-  borders("state",colour="black") +
-  xlim(-180,-50)+
-  geom_point(data=Map_ResponseVariables_LatLong, mapping=aes(x=Long,y=Lat,fill=Response_Variable),size=3.5,shape=21) +  #this is the dataframe of lat/long, and the points are being colored by num_codominants, with the point shape and size specified at the end fill=response variable
-  scale_colour_manual(values=GeneralGrantpal)+
-  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
-  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
-  xlab(expression("Longitude "*degree*"")) +
-  labs(fill="Response Variable") + #legend label
-  theme(legend.position=c(0.15,0.2))  #legend position
-#export at 1500 x 1000
-  
 
 #### Full Data Extraction ####
 
@@ -863,861 +847,12 @@ ggplot(RR_Calc, aes(x=LnRR, color=Treatment_Category,fill=Treatment_Category))+
   facet_grid(Data_Type ~ ResponseVariable)
 #save at 2000 x 1000
 
-#### Statistical Models ####
-
-#### Plant Glm Models ####
-
-RR_Calc$Treatment_Category=as.factor(RR_Calc$Treatment_Category)
-
-#Look at Diversity of Plants
-Diversity_Plants_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
-#is the F test correct? used for "for those with dispersion estimated by moments (e.g., gaussian, quasibinomial and quasipoisson fits) the F test is most appropriate"
-anova(Diversity_Plants_glm,test="F") #p=0.002252
-#post hoc test for lmer test
-summary(glht(Diversity_Plants_glm, mcp(Treatment_Category = "Tukey"))) #2-4 yr - 1 yr (p=0.65899), fire/grazing - 1 yr (p=0.00123), fire/grazing - 2-4 yr(p=0.12137)
-
-#Look at Abundance of Plants 
-Abundance_Plants_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
-anova(Abundance_Plants_glm,test="F")  #p=0.03373
-summary(glht(Abundance_Plants_glm, mcp(Treatment_Category = "Tukey"))) #2-4 yr - 1 yr (p=0.0267), fire/grazing - 1 yr (p=0.8832), fire/grazing - 2-4 yr(p=0.3471)
-
-#### Arthropod GLMs ####
-
-#Look at Diversity of Arthropods
-Diversity_Arthropods_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
-anova(Diversity_Arthropods_glm,test="F")  #p=0.06022
-summary(glht(Diversity_Arthropods_glm, mcp(Treatment_Category = "Tukey"))) #2-4 yr - 1 yr (p=0.3461), fire/grazing - 1 yr (p=0.0191), fire/grazing - 2-4 yr(p=0.2634)
-
-#Look at Abundance of Arthropods 
-Abundance_Arthropods_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
-anova(Abundance_Arthropods_glm,test="F")  #p=0.5067
-
-
-#### Birds GLMs ####
-
-#Look at Diversity of Birds
-Diversity_Birds_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="diversity")) #not enough data to run
-
-#Look at Abundance of Birds
-Abundance_Birds_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="abundance"))
-anova(Abundance_Birds_glm,test="F")  #p=0.3539
-
-#### Small Mammals GLMs ####
-#no data for diversity
-
-#Look at Abundance of Small Mammals
-Abundance_SmallMammals_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="SmallMammal" & Data_Type=="abundance"))
-anova(Abundance_SmallMammals_glm,test="F")  #p=0.8617
-
-
-#### Total Soil Carbon GLMs ####
-
-#Look at Abundance of Total Soil Carbon
-Abundance_TSC_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="TotalSoilCarbon" & Data_Type=="abundance"))
-anova(Abundance_TSC_glm,test="F")  #p=0.3407
-
-#### Total Soil Nitrogen GLMs ####
-
-#Look at Abundance of Total Soil Nitrogen
-Abundance_TSN_glm <- glm(LnRR ~ Treatment_Category, data = subset(RR_Calc,ResponseVariable=="TotalSoilNitrogen" & Data_Type=="abundance"))
-anova(Abundance_TSN_glm,test="F")  #p=0.1744
-
-
-#### Graphs of RR by Response Variable ####
-
 #Make Dataframe for graphs 
 RR_Calc_Avg<-RR_Calc %>% 
   group_by(ResponseVariable, Treatment_Category, Data_Type) %>%
   summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
   mutate(St_Error=std/sqrt(n)) %>% 
   ungroup()
-
-#Abundance
-ggplot(data=subset(RR_Calc_Avg,Data_Type=="abundance"),aes(x=Mean, y=Treatment_Category)) +
-  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
-  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
-  geom_point(size=4) +
-  facet_wrap(~ResponseVariable)
-#save at 2000x1000
-
-#Diversity
-ggplot(data=subset(RR_Calc_Avg,Data_Type=="diversity"),aes(x=Mean, y=Treatment_Category)) +
-  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
-  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
-  geom_point(size=4) +
-  facet_wrap(~ResponseVariable)
-#save at 2000x1000
-
-#### plant abundance and diversity on same bar graph ####
-
-RR_Calc_Avg_Bar<-RR_Calc %>% 
-  select(PDF_Study_ID,Study_Point,Treatment_Category, ResponseVariable,Data_Type,LnRR) %>% 
-  spread(key=Data_Type,value=LnRR, fill=NA) %>%
-  group_by(ResponseVariable, Treatment_Category) %>%
-  summarize(std_ab=sd(abundance,na.rm=TRUE),Mean_ab=mean(abundance,na.rm=TRUE),n_ab=length(abundance),std_div=sd(diversity,na.rm=TRUE),Mean_div=mean(diversity,na.rm=TRUE),n_div=length(diversity)) %>%
-  mutate(St_Error_div=std_div/sqrt(n_div),St_Error_ab=std_ab/sqrt(n_ab)) %>% 
-  ungroup() 
-  
-### Plants
-ggplot(data=subset(RR_Calc_Avg,ResponseVariable=="Plant"),aes(x=Treatment_Category, fill=Data_Type, y=Mean))+
-  geom_col(position="dodge")+
-  geom_errorbar(aes(ymin=Mean-St_Error,ymax=Mean+St_Error), width = .2,position=position_dodge(0.9))+
-  #Label the x-axis "Treatment"
-  xlab("Fire Return Interval")+
-  #Label the y-axis "Species Richness"
-  ylab("Ln Response Ratio")+
-  #Make the y-axis extend to 50
-  expand_limits(y=c(-2,2))+
-  geom_hline(yintercept=0)
-
-### Arthropods
-ggplot(data=subset(RR_Calc_Avg,ResponseVariable=="Arthropod"),aes(x=Treatment_Category, fill=Data_Type, y=Mean))+
-  geom_col(position="dodge")+
-  geom_errorbar(aes(ymin=Mean-St_Error,ymax=Mean+St_Error), width = .2,position=position_dodge(0.9))+
-  #Label the x-axis "Treatment"
-  xlab("Fire Return Interval")+
-  #Label the y-axis "Species Richness"
-  ylab("Ln Response Ratio")+
-  #Make the y-axis extend to 50
-  expand_limits(y=c(-4,4))+
-  geom_hline(yintercept=0)
-
-#### Subsetting by Taxanomic Group ####
-
-#### Plants by Taxanomic and Data Unit ####
-
-### Plant Diversity (taxa)
-Plant_Diversity_Taxa<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity")) %>% 
-  mutate(taxonomic_group=ifelse(taxonomic_group=="","Total",ifelse(taxonomic_group=="All","Total",taxonomic_group))) %>% 
-  filter(taxonomic_group!="native species" & taxonomic_group!="exotic species" & taxonomic_group!="native" & taxonomic_group!="exoitic" & taxonomic_group!="C4 grass" & taxonomic_group!="C3 grass")
-
-Plant_Diversity_Avg<-Plant_Diversity_Taxa %>% 
-  group_by(Treatment_Category, taxonomic_group) %>%
-  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
-  mutate(St_Error=std/sqrt(n)) %>% 
-  ungroup()
-
-#Plot
-ggplot(Plant_Diversity_Avg,aes(x=Mean, y=Treatment_Category)) +
-  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
-  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
-  geom_point(size=4) +
-  facet_wrap(~taxonomic_group)
-
-# bar graph
-ggplot(data=Plant_Diversity_Avg,aes(x=Treatment_Category, fill=taxonomic_group, y=Mean))+
-  geom_col(position="dodge")+
-  geom_errorbar(aes(ymin=Mean-St_Error,ymax=Mean+St_Error), width = .2,position=position_dodge(0.9))+
-  #Label the x-axis "Treatment"
-  xlab("Fire Return Interval")+
-  #Label the y-axis "Species Richness"
-  ylab("Ln Response Ratio")+
-  #Make the y-axis extend to 50
-  expand_limits(y=c(-2,2))+
-  geom_hline(yintercept=0)
-
-#Model
-Plant_Diversity_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Diversity_Taxa)
-anova(Plant_Diversity_Taxa_glm,test="F")  #treatment category (p=0.008836), taxonomic group (p=0.790816), interaction (p=0.640497)
-
-#posthoc test --- ran seperate model 
-Plant_Diversity_Taxa_glm_post <- glm(LnRR ~ Treatment_Category, data = Plant_Diversity_Taxa)
-anova(Plant_Diversity_Taxa_glm_,test="F")  #treatment category (p=0.008836), taxonomic group (p=0.790816), interaction (p=0.640497)
-summary(glht(Plant_Diversity_Taxa_glm_post, mcp(Treatment_Category = "Tukey"))) 
-
-### Plant Abundance (biomass)
-Plant_Abundance_Biomass<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance")) %>% 
-  #removing % biomass because it's not comparable with biomass
-  filter(Data_Units!="canopy cover (%)" & Data_Units!="cover" & Data_Units!="% cover" & Data_Units!="total cover (%)" & Data_Units!="biomass (%)" & Data_Units!="composition (%)" & Data_Units!="absolute species cover (%) " & Data_Units!="cover (%)" & Data_Units!="density (number of contracts with a vertical 4 mm-diameter rod)" & Data_Units!="canopy cover" & Data_Units!="average cover (0.1 m2)")
-
-Plant_Abundance_Biomass_Avg<-Plant_Abundance_Biomass %>% 
-  group_by(Treatment_Category) %>%
-  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
-  mutate(St_Error=std/sqrt(n)) %>% 
-  ungroup()
-
-ggplot(Plant_Abundance_Biomass_Avg,aes(x=Mean, y=Treatment_Category)) +
-  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
-  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
-  geom_point(size=4) 
-
-
-#Model
-Plant_Abundance_Biomass_glm <- glm(LnRR ~ Treatment_Category, data = Plant_Abundance_Biomass)
-anova(Plant_Abundance_Biomass_glm,test="F")  #p=0.07584
-summary(glht(Plant_Abundance_Biomass_glm, mcp(Treatment_Category = "Tukey"))) #get an error - tried emmeans and get NAs
-
-### Plant Abundance (biomass*taxonomic group)
-Plant_Abundance_Biomass_Taxa<-Plant_Abundance_Biomass %>% 
-  #grouping all total biomass and woody and shrubs together 
-  mutate(taxonomic_group=ifelse(taxonomic_group=="","Total",ifelse(taxonomic_group=="grass ","grasses",ifelse(taxonomic_group=="grass biomass","grasses",ifelse(taxonomic_group=="forb biomass","forbs",ifelse(taxonomic_group=="forb","forbs",taxonomic_group)))))) %>% 
-  filter(taxonomic_group!="poa pratensis" & taxonomic_group!="schizachyrium scoparium" & taxonomic_group!="Lespedeza capitata")
-Plant_Abundance_Biomass_Taxa$taxonomic_group<-as.factor(Plant_Abundance_Biomass_Taxa$taxonomic_group)
-
-
-Plant_Abundance_Biomass_Taxa_Avg<-Plant_Abundance_Biomass_Taxa%>% 
-  group_by(Treatment_Category, taxonomic_group) %>%
-  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
-  mutate(St_Error=std/sqrt(n)) %>% 
-  ungroup()
-
-
-#Graph
-ggplot(Plant_Abundance_Biomass_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
-  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
-  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
-  geom_point(size=4) +
-  facet_wrap(~taxonomic_group)
-
-# bar graph
-ggplot(data=Plant_Abundance_Biomass_Taxa_Avg,aes(x=Treatment_Category, fill=taxonomic_group, y=Mean))+
-  geom_col(position="dodge")+
-  geom_errorbar(aes(ymin=Mean-St_Error,ymax=Mean+St_Error), width = .2,position=position_dodge(0.9))+
-  #Label the x-axis "Treatment"
-  xlab("Fire Return Interval")+
-  #Label the y-axis "Species Richness"
-  ylab("Ln Response Ratio")+
-  #Make the y-axis extend to 50
-  expand_limits(y=c(-2,2))+
-  geom_hline(yintercept=0)
-
-#Model
-Plant_Abundance_Biomass_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Abundance_Biomass_Taxa)
-anova(Plant_Abundance_Biomass_Taxa_glm,test="F")  #treatment (0.05773), taxonomic group (0.03997)
-
-#post hoc for treatment
-Plant_Abundance_Biomass_Taxa_glm_trt <- glm(LnRR ~ Treatment_Category, data = Plant_Abundance_Biomass_Taxa)
-anova(Plant_Abundance_Biomass_Taxa_glm_trt,test="F") 
-summary(glht(Plant_Abundance_Biomass_Taxa_glm_trt, mcp(Treatment_Category = "Tukey"))) 
-
-#post hoc for taxonomic group
-Plant_Abundance_Biomass_Taxa_glm_tax <- glm(LnRR ~ taxonomic_group, data = Plant_Abundance_Biomass_Taxa)
-anova(Plant_Abundance_Biomass_Taxa_glm_tax,test="F") 
-summary(glht(Plant_Abundance_Biomass_Taxa_glm_tax, mcp(taxonomic_group = "Tukey"))) 
-
-
-#### Plant Abundance (cover)
-Plant_Abundance_Cover<-droplevels(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance")) %>% 
-  #removing % biomass because it's not comparable with biomass
-  filter(Data_Units!="total ANPP (g m-2)" & Data_Units!="biomass (g.m-2)" & Data_Units!="total plant biomass (g.m-2)" & Data_Units!="biomass (%)" & Data_Units!="total ANPP" & Data_Units!="biomass (g/m2)" & Data_Units!="ANPP (g m-2)" & Data_Units!="dry biomass (g/m2)" & Data_Units!="aboveground biomass (g/m2)" & Data_Units!="density (number of contracts with a vertical 4 mm-diameter rod)" & Data_Units!="aboveground NPP (gm-2)" & Data_Units!="residual biomass (g/m2) - average standing crop biomass (dry mass)")
-
-Plant_Abundance_Cover_Avg<-Plant_Abundance_Cover %>% 
-  group_by(Treatment_Category) %>%
-  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
-  mutate(St_Error=std/sqrt(n)) %>% 
-  ungroup()
-
-#Graph
-ggplot(Plant_Abundance_Cover_Avg,aes(x=Mean, y=Treatment_Category)) +
-  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
-  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
-  geom_point(size=4) 
-
-#Model
-Plant_Abundance_Cover_glm <- glm(LnRR ~ Treatment_Category, data = Plant_Abundance_Cover)
-anova(Plant_Abundance_Cover_glm,test="F")  #0.03613
-summary(glht(Plant_Abundance_Cover_glm, mcp(Treatment_Category = "Tukey"))) #2-4 yr - 1 yr (p=0.0257), fire/grazing - 1 yr (p=0.8447), fire/grazing - 2-4 yr(p=0.1182)
-
-####Abundance (cover*taxonomic group)
-Plant_Abundance_Cover_Taxa<-Plant_Abundance_Cover %>% 
-#grouping all total biomass and woody and shrubs together 
-mutate(taxonomic_group=ifelse(taxonomic_group=="","Total",ifelse(taxonomic_group=="total live","Total",ifelse(taxonomic_group=="total cover","Total",ifelse(taxonomic_group=="forbes","forbs",ifelse(taxonomic_group=="forb","forbs",ifelse(taxonomic_group=="grass","grasses",ifelse(taxonomic_group=="woody plants","woody",ifelse(taxonomic_group=="shrubs","woody",ifelse(taxonomic_group=="shrub","woody",ifelse(taxonomic_group=="forb cover","forbs",taxonomic_group))))))))))) %>% 
-  filter(taxonomic_group!="introduced cool-season grass" & taxonomic_group!="Sorghastrum nutans" & taxonomic_group!="Andropogon gerardii" & taxonomic_group!="native species" & taxonomic_group!="exotic species" & taxonomic_group!="Tallgrasses" & taxonomic_group!="little blue stem" & taxonomic_group!="all other perennial grasses" & taxonomic_group!="annual grasses" & taxonomic_group!="legumes" & taxonomic_group!="native" & taxonomic_group!="exoitic" & taxonomic_group!="warm season grasses" & taxonomic_group!="native forbs" & taxonomic_group!="cool-seasoned grasses" & taxonomic_group!="exotic forbs" & taxonomic_group!="tallgrass" & taxonomic_group!="tallgrasses" & taxonomic_group!="little bluestem" & taxonomic_group!="other perennial grasses" & taxonomic_group!="sericea lespedeza" & taxonomic_group!="cool season grasses" & taxonomic_group!="native forb cover" & taxonomic_group!="exotic forb cover") %>% 
-  mutate(Taxa_Trt=paste(taxonomic_group,Treatment_Category,sep="_"))
-
-Plant_Abundance_Cover_Taxa$taxonomic_group<-as.factor(Plant_Abundance_Cover_Taxa$taxonomic_group)
-Plant_Abundance_Cover_Taxa$Taxa_Trt<-as.factor(Plant_Abundance_Cover_Taxa$Taxa_Trt)
-  
-
-Plant_Abundance_Cover_Taxa_Avg<-Plant_Abundance_Cover_Taxa%>% 
-  group_by(Treatment_Category, taxonomic_group) %>%
-  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
-  mutate(St_Error=std/sqrt(n)) %>% 
-  ungroup()
-
-#Graph
-ggplot(Plant_Abundance_Cover_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
-  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
-  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
-  geom_point(size=4) +
-  facet_wrap(~taxonomic_group)
-
-#bar graph
-ggplot(data=Plant_Abundance_Cover_Taxa_Avg,aes(x=Treatment_Category, fill=taxonomic_group, y=Mean))+
-  geom_col(position="dodge")+
-  geom_errorbar(aes(ymin=Mean-St_Error,ymax=Mean+St_Error), width = .2,position=position_dodge(0.9))+
-  #Label the x-axis "Treatment"
-  xlab("Fire Return Interval")+
-  #Label the y-axis "Species Richness"
-  ylab("Ln Response Ratio")+
-  expand_limits(y=c(-4,4))+
-  geom_hline(yintercept=0)
-
-#Model
-Plant_Abundance_Cover_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Plant_Abundance_Cover_Taxa)
-anova(Plant_Abundance_Cover_Taxa_glm,test="F")  #treatment (p=0.0044498), taxonomic group (p=0.0005604), interaction(p=0.0299557)
-
-#post hoc for treatment
-Plant_Abundance_Cover_Taxa_glm_trt <- glm(LnRR ~ Treatment_Category, data = Plant_Abundance_Cover_Taxa)
-anova(Plant_Abundance_Cover_Taxa_glm_trt,test="F")  
-summary(glht(Plant_Abundance_Cover_Taxa_glm_trt, mcp(Treatment_Category = "Tukey"))) 
-
-#post hoc for taxa
-Plant_Abundance_Cover_Taxa_glm_tax <- glm(LnRR ~ taxonomic_group, data = Plant_Abundance_Cover_Taxa)
-anova(Plant_Abundance_Cover_Taxa_glm_tax,test="F")  
-summary(glht(Plant_Abundance_Cover_Taxa_glm_tax, mcp(taxonomic_group = "Tukey"))) 
-
-#post hoc for taxa*treatment
-Plant_Abundance_Cover_Taxa_glm_Int <- glm(LnRR ~ Taxa_Trt, data = Plant_Abundance_Cover_Taxa)
-anova(Plant_Abundance_Cover_Taxa_glm_Int,test="F") 
-summary(glht(Plant_Abundance_Cover_Taxa_glm_Int, mcp(Taxa_Trt = "Tukey")))
-
-
-#need to make column with taxa and treatment in it
-summary(glht(Plant_Abundance_Cover_Taxa_glm, mcp(Treatment_Category = "Tukey"))) #2-4 yr - 1 yr (p=0.0266), fire/grazing - 1 yr (p=8832), fire/grazing - 2-4 yr(p=0.3471)
-
-#### Arthropods by Taxanomic and Data Unit ####
-
-### Arthropod Abundance (count)
-Arthro_Abundance_Count<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance")) %>%
-  filter(Data_Units=="count") #only two data points - did not proceed
-
-### Arthropod Abundance (density (individuals / m2))
-Arthro_Abundance_Density<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance")) %>%
-  filter(Data_Units=="density (individuals / m2)") #only one data points - did not proceed
-
-### Arthropod Abundance (Biomass)
-Arthro_Abundance_Biomass<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance")) %>%
-  filter(Data_Units!="count" & Data_Units!="density (individuals / m2)" & Data_Units!="relative abundance (%)" & Data_Units!="relative abundance (%)") 
-
-Arthro_Abundance_Biomass_Avg<-Arthro_Abundance_Biomass %>% 
-  group_by(Treatment_Category) %>%
-  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
-  mutate(St_Error=std/sqrt(n)) %>% 
-  ungroup()
-
-#Plot
-ggplot(Arthro_Abundance_Biomass_Avg,aes(x=Mean, y=Treatment_Category)) +
-  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
-  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
-  geom_point(size=4) 
-
-#Model
-Arthro_Abundance_Biomass_glm <- glm(LnRR ~ Treatment_Category, data = Arthro_Abundance_Biomass)
-anova(Arthro_Abundance_Biomass_glm,test="F")  #p=0.2495
-
-### Arthropod Abundance (Biomass*orders)
-Arthro_Abundance_Biomass_Taxa<-Arthro_Abundance_Biomass %>%
-  mutate(taxonomic_group=ifelse(taxonomic_group=="","Total",ifelse(taxonomic_group=="total invertebrates","Total",ifelse(taxonomic_group=="total abundance","Total",ifelse(taxonomic_group=="total biomass","Total",taxonomic_group))))) %>% 
-  filter(taxonomic_group!="butterfly")
-
-Arthro_Abundance_Biomass_Taxa_Avg<-Arthro_Abundance_Biomass_Taxa %>% 
-  group_by(Treatment_Category,taxonomic_group) %>%
-  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
-  mutate(St_Error=std/sqrt(n)) %>% 
-  ungroup()
-
-#Plot
-ggplot(Arthro_Abundance_Biomass_Taxa_Avg,aes(x=Mean, y=Treatment_Category)) +
-  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
-  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
-  geom_point(size=4)+
-  facet_wrap(~taxonomic_group)
-
-#bar graph
-ggplot(data=Arthro_Abundance_Biomass_Taxa_Avg,aes(x=Treatment_Category, fill=taxonomic_group, y=Mean))+
-  geom_col(position="dodge")+
-  geom_errorbar(aes(ymin=Mean-St_Error,ymax=Mean+St_Error), width = .2,position=position_dodge(0.9))+
-  #Label the x-axis "Treatment"
-  xlab("Fire Return Interval")+
-  #Label the y-axis "Species Richness"
-  ylab("Ln Response Ratio")+
-  expand_limits(y=c(-4,4))+
-  geom_hline(yintercept=0)
-
-
-#Model
-Arthro_Abundance_Biomass_Taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data = Arthro_Abundance_Biomass_Taxa)
-anova(Arthro_Abundance_Biomass_Taxa_glm,test="F")  #treatment (0.3114), taxonomic group (p=0.7664), interaction (0.5317)
-
-### Arthropod Abundance (relative Abundance)
-Arthro_Abundance_RelAbund<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance")) %>%
-  filter(Data_Units=="relative abundance (%)") 
-
-Arthro_Abundance_RelAbund_Avg<-Arthro_Abundance_RelAbund %>% 
-  group_by(Treatment_Category) %>%
-  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
-  mutate(St_Error=std/sqrt(n)) %>% 
-  ungroup()
-
-#Plot
-ggplot(Arthro_Abundance_RelAbund_Avg,aes(x=Mean, y=Treatment_Category)) +
-  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
-  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
-  geom_point(size=4) 
-
-#Model
-Arthro_Abundance_RelAbund_glm <- glm(LnRR ~ Treatment_Category, data = Arthro_Abundance_RelAbund)
-anova(Arthro_Abundance_RelAbund_glm,test="F")  #p=0.9536
-
-
-### Arthropod Abundance (relative abundance*grassfeeders vs forb/mixed feeders)
-#can use above dataframe because there is no other taxonomic groups
-
-Arthro_Abundance_RelAbund_Avg_Taxa<-Arthro_Abundance_RelAbund %>% 
-  group_by(Treatment_Category,taxonomic_group) %>%
-  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
-  mutate(St_Error=std/sqrt(n)) %>% 
-  ungroup()
-
-#Plot
-ggplot(Arthro_Abundance_RelAbund_Avg_Taxa,aes(x=Mean, y=Treatment_Category)) +
-  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
-  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
-  geom_point(size=4) +
-  facet_wrap(~taxonomic_group)
-
-#Model
-Arthro_Abundance_RelAbund_taxa_glm <- glm(LnRR ~ Treatment_Category*taxonomic_group, data =Arthro_Abundance_RelAbund)
-anova(Arthro_Abundance_RelAbund_taxa_glm,test="F")  #treatment (0.9416), taxonomic group (p=0.1744), interaction (0.4508)
-
-### Arthropod Diversity (richness)
-Arthro_Diversity_Richness<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity")) %>%
-  filter(Data_Units!="log series α" & Data_Units!= "diversity (shannon diversity)")
-
-Arthro_Diversity_Richness_Avg<-Arthro_Diversity_Richness %>% 
-  group_by(Treatment_Category) %>%
-  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
-  mutate(St_Error=std/sqrt(n)) %>% 
-  ungroup()
-
-#Plot
-ggplot(Arthro_Diversity_Richness_Avg,aes(x=Mean, y=Treatment_Category)) +
-  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
-  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
-  geom_point(size=4) 
-
-#Model
-Arthro_Diversity_Richness_glm <- glm(LnRR ~ Treatment_Category, data = Arthro_Diversity_Richness)
-anova(Arthro_Diversity_Richness_glm,test="F")  #0.2634
-
-### Arthropod Diversity (shannon's)
-Arthro_Diversity_Shannons<-droplevels(subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity")) %>%
-  filter(Data_Units!="species richness" & Data_Units!= "diversity (shannon diversity)" & Data_Units!= "S (species richness)" & Data_Units!= "species richness ")
-
-Arthro_Diversity_Shannons_Avg<-Arthro_Diversity_Shannons %>% 
-  group_by(Treatment_Category) %>%
-  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
-  mutate(St_Error=std/sqrt(n)) %>% 
-  ungroup()
-
-#Plot
-ggplot(Arthro_Diversity_Shannons_Avg,aes(x=Mean, y=Treatment_Category)) +
-  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
-  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
-  geom_point(size=4) 
-
-#Model
-Arthro_Diversity_Shannons_glm <- glm(LnRR ~ Treatment_Category, data = Arthro_Diversity_Shannons) #can't run - only two studies
-
-#### Birds by Taxanomic and Data Unit ####
-#could not break down by taxanomic group
-
-### Bird Abundance (abundance (N detections))
-Bird_Abundance_NDetect<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="abundance")) %>%
-  filter(Data_Units=="abundance (N detections)") #only one data points - did not proceed
-
-### Bird Abundance (number of eggs per female")
-Bird_Abundance_Eggs<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="abundance")) %>%
-  filter(Data_Units=="number of eggs per female") #not enough data - only one fire type
-
-### Arthropod Abundance (number of young per successful nest)
-Bird_Abundance_Young<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="abundance")) %>%
-  filter(Data_Units!="number of young per successful nest") 
-
-Bird_Abundance_Young_Avg<-Bird_Abundance_Young %>% 
-  group_by(Treatment_Category) %>%
-  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
-  mutate(St_Error=std/sqrt(n)) %>% 
-  ungroup()
-
-#Plot
-ggplot(Bird_Abundance_Young_Avg,aes(x=Mean, y=Treatment_Category)) +
-  geom_vline(aes(xintercept = 0), size = .25, linetype = "dashed") +
-  geom_errorbarh(aes(xmin=Mean-St_Error,xmax=Mean+St_Error), size = .8, height = .2, color = "gray50")+
-  geom_point(size=4) 
-
-#Model
-Bird_Abundance_Young_glm <- glm(LnRR ~ Treatment_Category, data = Bird_Abundance_Young)
-anova(Bird_Abundance_Young_glm,test="F")  #0.6143
-
-### Bird Diversity (richness)
-Bird_Diversity_Richness<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="diversity")) %>%
-  filter(Data_Units=="species richness (S)") #only one data point - did not proceed
-
-### Bird Diversity (shannon diversity)
-Bird_Diversity_ShannonD<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="diversity")) %>%
-  filter(Data_Units=="shannon diversity") #only one data point - did not proceed
-
-### Bird Diversity (Shannon evenness)
-Bird_Diversity_ShannonE<-droplevels(subset(RR_Calc,ResponseVariable=="Bird" & Data_Type=="diversity")) %>%
-  filter(Data_Units=="Shannon evenness") #only one data point - did not proceed
-
-#### Plot Abundance * Diversity ####
-
-Abund_Div<-RR_Calc_Avg %>% 
-  spread(key=Data_Type,value=Mean, fill=0)
-
-Abund_Div<-RR_Calc %>% 
-  select(PDF_Study_ID,Study_Point,Treatment_Category, ResponseVariable,Data_Type,LnRR) %>% 
-  spread(key=Data_Type,value=LnRR, fill=NA) %>%
-  group_by(ResponseVariable, Treatment_Category) %>%
-  summarize(std_ab=sd(abundance,na.rm=TRUE),Mean_ab=mean(abundance,na.rm=TRUE),n_ab=length(abundance),std_div=sd(diversity,na.rm=TRUE),Mean_div=mean(diversity,na.rm=TRUE),n_div=length(diversity)) %>%
-  mutate(St_Error_div=std_div/sqrt(n_div),St_Error_ab=std_ab/sqrt(n_ab)) %>% 
-  mutate(margin_ab=qt(0.975,df=n_ab-1)*Mean_ab/sqrt(n_ab)) %>% 
-  mutate(margin_div=qt(0.975,df=n_div-1)*Mean_div/sqrt(n_div)) %>% 
-  mutate(lowerinterval_ab=Mean_ab-margin_ab) %>% 
-  mutate(upperinterval_ab=Mean_ab+margin_ab) %>% 
-  mutate(lowerinterval_div=Mean_div-margin_div) %>% 
-  mutate(upperinterval_div=Mean_div+margin_div) %>% 
-  ungroup() 
-
-Abund_Div[is.na(Abund_Div)] <- 0
-
-# The palette with grey:
-cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00")
-  
-#all fire return intervals
-ggplot(Abund_Div,aes(x=Mean_ab, y=Mean_div,color=ResponseVariable,shape=Treatment_Category))+
-  geom_point(size=8)+
-  xlim(-4,4)+
-  ylim(-4,4)+
-  geom_hline(yintercept=0)+geom_vline(xintercept=0)+
-  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), linewidth = .8, height = .2)+
-  geom_errorbar(aes(ymin=lowerinterval_div,ymax=upperinterval_div), linewidth = .8)+
-  scale_shape_manual(values=c(15,16,17),labels = c("1 year fire frequency", "2-4 year fire frequency","Fire and Grazing"), breaks = c("1yr","2-4yr","fire + grazing"),name="Fire Frequency")+
-  scale_color_manual(values=cbPalette,labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  xlab("LnRR of Abundance")+
-  ylab("LnRR of Diversity")
-#save at 2000 x 1500
-
-#each fire return interval individually
-
-#1 yr
-Fire1yr<-ggplot(data=subset(Abund_Div,Treatment_Category=="1yr"),aes(x=Mean_ab, y=Mean_div,shape=ResponseVariable,color=ResponseVariable))+
-  geom_point(size=8)+
-  xlim(-4,4)+
-  ylim(-4,4)+
-  geom_hline(yintercept=0)+geom_vline(xintercept=0)+
-  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), linewidth = 0.9, height = .5)+
-  geom_errorbar(aes(ymin=lowerinterval_div,ymax=upperinterval_div), linewidth = 0.9)+
-  scale_shape_manual(values=c(15,16,17,21,22,24),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  scale_color_manual(values=cbPalette,labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  xlab("LnRR of Abundance")+
-  ylab("LnRR of Diversity")
-#save at 1500 x 1000
-
-#2-4 yr
-Fire2_4yr<-ggplot(data=subset(Abund_Div,Treatment_Category=="2-4yr"),aes(x=Mean_ab, y=Mean_div,shape=ResponseVariable,color=ResponseVariable))+
-  geom_point(size=8)+
-  xlim(-4,4)+
-  ylim(-4,4)+
-  geom_hline(yintercept=0)+geom_vline(xintercept=0)+
-  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), linewidth = 0.9, height = .5)+
-  geom_errorbar(aes(ymin=lowerinterval_div,ymax=upperinterval_div), linewidth = 0.9)+
-  scale_shape_manual(values=c(15,16,17,21,22,24),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  scale_color_manual(values=cbPalette,labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  xlab("LnRR of Abundance")+
-  ylab("LnRR of Diversity")
-#save at 1500 x 1000
-
-#Fire+grazing
-Fire_Grazing<-ggplot(data=subset(Abund_Div,Treatment_Category=="fire + grazing"),aes(x=Mean_ab, y=Mean_div,shape=ResponseVariable,color=ResponseVariable))+
-  geom_point(size=8)+
-  xlim(-4,4)+
-  ylim(-4,4)+
-  geom_hline(yintercept=0)+geom_vline(xintercept=0)+
-  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), linewidth = 0.9, height = .5)+
-  geom_errorbar(aes(ymin=lowerinterval_div,ymax=upperinterval_div), linewidth = 0.9)+
-  scale_shape_manual(values=c(15,16,17,21,22,24),labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  scale_color_manual(values=cbPalette,labels = c("Birds","Arthropods","Plants","Small Mammals","Total Soil Carbon","Total Soil Nitrogen"), breaks = c("Bird","Arthropod","Plant","SmallMammal","TotalSoilCarbon","TotalSoilNitrogen"),name="Response Variable")+
-  xlab("LnRR of Abundance")+
-  ylab("LnRR of Diversity")
-#save at 1500 x 1000
-
-
-#### Map of Study Locations ####
-
-Map_Dataframe<-RR_Calc %>% 
-  filter(Longitude!="" & Latitude!="") %>% 
-  mutate(ID=paste(PDF_Study_ID,Study_Point,sep = "_")) %>% 
-  select(ID,Longitude,Latitude,ResponseVariable)
-
-
-#map of big data extraction data points so far
-ggplot()+
-  geom_polygon(data = NA_MapData, aes(x=long, y = lat, group = group), fill="white",colour="darkgray", alpha=0.3) +
-  geom_polygon(data = TGP_MapData, aes(x=long, y=lat, group = region, fill = region),fill="gray")+
-  geom_polygon(data = TGP_MapData_Canada, aes(x=long, y=lat, group = country.etc, fill = country.etc),fill="gray")+
-  borders("state",colour="black") +
-  xlim(-180,-50)+
-  geom_count(data=Map_Dataframe, mapping=aes(x=Longitude,y=Latitude,fill=ResponseVariable,shape=ResponseVariable)) +  #this is the dataframe of lat/long, and the points are being colored by num_codominants, with the point shape and size specified at the end fill=response variable 
-  scale_size_area()+
-  scale_colour_manual(values=GeneralGrantpal)+
-  theme(text=element_text(size=20, colour="black"),axis.text.x=element_text(size=20, colour="black"),axis.text.y=element_text(size=20, colour="black")) + #formatting the text
-  ylab(expression("Latitude "*degree*""))+ #labels for the map x and y axes
-  xlab(expression("Longitude "*degree*"")) 
-#export at 1500 x 1000
-
-
-
-#### Tried but decided not to do ####
-
-#### Plant Linear Regression Models
-
-### not going to do these because there is not enough spread of the data across longitude to accurately compare
-
-#Create function for linear regression
-linreg = function (formula) {
-  m=lm(formula)
-  list(slope=coefficients(m)[2], intercept=coefficients(m)[1], adj.r2=summary(m)$adj.r.squared, f=summary(m)$fstatistic[1],p.val=summary(m)$coefficients[2,4])
-}
-
-#Look at abundance of Plants
-#create data table of plant abundance
-RR_Plant_Abundance<-data.table(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
-
-#linreg is x by y
-Abundance_Plants_regression <- RR_Plant_Abundance[,linreg(Longitude~LnRR),by=Treatment_Category]
-Abundance_Plants_regression #negative r2 means so much spread that there is no trend (could be noice)
-
-#Look at diversity of Plants
-#create data table of plant diversity
-RR_Plant_Diversity<-data.table(subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
-
-#linreg is x by y
-Diversity_Plants_regression <- RR_Plant_Diversity[,linreg(Longitude~LnRR),by=Treatment_Category]
-Diversity_Plants_regression
-
-#### Graphs of Regressions (by longitude) ##
-
-## Abundance 
-ggplot(data=subset(RR_Calc,Data_Type=="abundance"), aes(x=-Longitude,y=LnRR,fill=Treatment_Category,color=Treatment_Category))+
-  geom_jitter()+
-  facet_wrap(~ResponseVariable)
-#geom_smooth(data=subset(RR_Plant_Abundance,Treatment_Category=="2-4yr"),aes(x=-Longitude,y=LnRR,fill=Treatment_Category,color=Treatment_Category),method="lm",se=FALSE)
-
-## Diversity
-ggplot(data=subset(RR_Calc,Data_Type=="diversity"), aes(x=-Longitude,y=LnRR,fill=Treatment_Category,color=Treatment_Category))+
-  geom_jitter()+
-  facet_wrap(~ResponseVariable)
-
-##Plant Diversity
-ggplot(RR_Plant_Diversity, aes(x=-Longitude,y=LnRR,fill=Treatment_Category,color=Treatment_Category))+
-  geom_jitter()+
-  geom_smooth(data=subset(RR_Plant_Diversity,Treatment_Category=="2-4yr"),aes(x=-Longitude,y=LnRR,fill=Treatment_Category,color=Treatment_Category),method="lm",se=FALSE)
-
-
-#### GLM Model Options not used 
-
-#with random effect of PDF_Study ID
-Diversity_Plants_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
-anova(Diversity_Plants_Glmm)
-
-#with random effect of Study_Point_n nested in PDF_Study ID 
-Diversity_Plants_Glmm_nest <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID:Study_Point_n), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="diversity"))
-anova(Diversity_Plants_Glmm_nest)
-
-#Compare AIC Values
-AIC(Diversity_Plants_glm,Diversity_Plants_Glmm,Diversity_Plants_Glmm_nest) #Diversity_Plants_glm (simplest) is the best
-
-#plant abundance 
-#with random effect of PDF_Study ID
-Abundance_Plants_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
-anova(Abundance_Plants_Glmm)
-
-#with random effect of Study_Point_n nested in PDF_Study ID 
-Abundance_Plants_Glmm_nest <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID:Study_Point_n), data = subset(RR_Calc,ResponseVariable=="Plant" & Data_Type=="abundance"))
-anova(Abundance_Plants_Glmm_nest)
-
-#Compare AIC Values
-AIC(Abundance_Plants_glm,Abundance_Plants_Glmm,Abundance_Plants_Glmm_nest) #Abundance_Plants_Glmm is the best but AIC is 1513.589 compared to glm which is 1521.799
-
-##Arthropod diversity 
-#with random effect of PDF_Study ID
-Diversity_Arthropods_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
-anova(Diversity_Arthropods_Glmm)
-
-#with random effect of Study_Point_n nested in PDF_Study ID 
-Diversity_Arthropods_Glmm_nest <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID:Study_Point_n), data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="diversity"))
-anova(Diversity_Arthropods_Glmm_nest)
-
-#Compare AIC Values
-AIC(Diversity_Arthropods_glm,Diversity_Arthropods_Glmm,Diversity_Arthropods_Glmm_nest) #Diversity_Arthropods_GLmm is the best but AIC of Glmm is 51.02890 and AIC of glm= 54.09142
-
-## Arthropod Abundance
-
-#with random effect of PDF_Study ID
-Abundance_Arthropods_Glmm <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID), data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
-anova(Abundance_Arthropods_Glmm)
-
-#with random effect of Study_Point_n nested in PDF_Study ID 
-Abundance_Arthropods_Glmm_nest <- lmer(LnRR ~ Treatment_Category + (1|PDF_Study_ID:Study_Point_n), data = subset(RR_Calc,ResponseVariable=="Arthropod" & Data_Type=="abundance"))
-anova(Abundance_Arthropods_Glmm_nest)
-
-#Compare AIC Values
-AIC(Abundance_Arthropods_glm,Abundance_Arthropods_Glmm,Abundance_Arthropods_Glmm_nest) #Abundance_Arthropods_Glmm is the best but AIC is 152.7377 compared to glm which is 154.7938
-
-#### NMDS 
-#Create dataframe for NMDS 
-Wide_RR_Calc_Spread<-RR_Calc %>%
-  #all data must be postivie for Bray Curtis dissimilarity -- so following this guide (http://strata.uga.edu/8370/lecturenotes/multidimensionalScaling.html) and adding a constant to each number so ratios are correct but no negative values exist -- there's a function on that website but I do not understand how it works and I get an error so for now I am  just adding 5 to everything (slight lower than the smallest number for the LnRR)
-  mutate(LnRR_5=LnRR+5) %>% 
-  #merge PDF Study ID and study point together
-  mutate(ID=paste(PDF_Study_ID,Study_Point,sep=".")) %>% 
-  select(ID,ResponseVariable,Data_Type,Treatment_Category,LnRR_5) %>% 
-  #Make a wide table using column correct order as overarching columns, fill with values from correct dry weight column, if there is no value for one cell, insert a zero
-  spread(key=ID,value=LnRR_5, fill=0)
-
-#separate out diversity and abundance
-Wide_RR_Calc_Diversity_Spread<-Wide_RR_Calc_Spread %>% 
-  filter(Data_Type=="diversity") %>% 
-  select(-Data_Type)
-
-Wide_RR_Calc_Abundance_Spread<-Wide_RR_Calc_Spread %>% 
-  filter(Data_Type=="abundance") %>% 
-  select(-Data_Type)
-
-## Diversity
-BC_Data_Div_Spread <- metaMDS(Wide_RR_Calc_Diversity_Spread[,4:610],na.rm=TRUE)
-#look at species signiciance driving NMDS 
-intrinsics <- envfit(BC_Data_Div_Spread, Wide_RR_Calc_Diversity_Spread, permutations = 999,na.rm = TRUE)
-head(intrinsics)
-#Make a data frame called sites with 1 column and same number of rows that is in Wide Order weight
-sites_civ <- 1:nrow(Wide_RR_Calc_Diversity_Spread)
-#Make a new data table called BC_Meta_Data and use data from Wide_RR_Calc_Diversity columns 1-2
-BC_Meta_Data_Div_Spread <- Wide_RR_Calc_Diversity_Spread[,1:2] 
-#make a plot using the dataframe BC_Data and the column "points".  Make treatment category a factor - make the different grazing treatments different colors
-plot(BC_Data_Div_Spread$points,col=as.factor(BC_Meta_Data_Div_Spread$ResponseVariable))
-#make elipses using the BC_Data.  Group by grazing treatment and use standard deviation to draw eclipses
-ordiellipse(BC_Data_Div_Spread,groups = as.factor(BC_Meta_Data_Div_Spread$Treatment_Category),kind = "sd",display = "sites", label = T)
-
-## Abundance
-BC_Data_Abun_Spread <- metaMDS(Wide_RR_Calc_Abundance_Spread[,4:610],na.rm=TRUE)
-#look at species signiciance driving NMDS 
-intrinsics <- envfit(BC_Data_Abun_Spread, Wide_RR_Calc_Abundance_Spread, permutations = 999,na.rm = TRUE)
-head(intrinsics)
-#Make a data frame called sites with 1 column and same number of rows that is in Wide Order weight
-sites_civ <- 1:nrow(Wide_RR_Calc_Abundance_Spread)
-#Make a new data table called BC_Meta_Data and use data from Wide_RR_Calc_Diversity columns 1-2
-BC_Meta_Data_Abun_Spread <- Wide_RR_Calc_Abundance_Spread[,1:2] 
-#make a plot using the dataframe BC_Data and the column "points".  Make treatment category a factor - make the different grazing treatments different colors
-plot(BC_Data_Abun_Spread$points,col=as.factor(BC_Meta_Data_Abun_Spread$ResponseVariable))
-#make elipses using the BC_Data.  Group by grazing treatment and use standard deviation to draw eclipses
-ordiellipse(BC_Data_Abun_Spread,groups = as.factor(BC_Meta_Data_Abun_Spread$Treatment_Category),kind = "sd",display = "sites", label = T)
-
-#### Radar/Spider Graphs ####
-#trying to figure out
-
-### Plant Abundance with Taxanomic Group
-#make dataframe wide
-Plant_Abundance_Biomass_Spider<-Plant_Abundance_Biomass_Taxa %>% 
-  group_by(Treatment_Category,taxonomic_group) %>% 
-  mutate(Avg_LnRR=mean(LnRR)) %>% 
-  ungroup() %>% 
-  select(Treatment_Category,taxonomic_group,Avg_LnRR) %>% 
-  unique() %>% 
-  #Make a wide table using column correct order as overarching columns, fill with values from correct dry weight column, if there is no value for one cell, insert a zero
-  spread(key=taxonomic_group,value=Avg_LnRR, fill=NA)
-
-#create the spider graph 
-ggradar(Plant_Abundance_Biomass_Spider,is_linear = function() TRUE)
-
-# Define a new coordinate system 
-coord_radar <- function(...) { 
-  structure(coord_polar(...), class = c("radar", "polar", "coord")) 
-} 
-is.linear.radar <- function(coord) TRUE 
-
-ggplot(Plant_Abundance_Biomass_Taxa_Avg, aes(x = Treatment_Category, y = Mean)) + 
-  geom_path(aes(group = taxonomic_group)) +
-  coord_radar() + facet_wrap(~ model,ncol=4) + 
-  theme(strip.text.x = element_text(size = rel(0.8)), 
-        axis.text.x = element_text(size = rel(0.8))) 
-
-
-### Spider: Plant Diversity with Taxanomic Group ####
-#make dataframe wide
-Plant_Diversity_Spider<-Plant_Diversity_Avg %>% 
-  select(Treatment_Category,taxonomic_group,Mean) %>% 
-  #Make a wide table using column correct order as overarching columns, fill with values from correct dry weight column, if there is no value for one cell, insert a zero
-  spread(key=taxonomic_group,value=Mean, fill=NA) %>% 
-  rename("group"="Treatment_Category") %>% 
-  ggradar(values.radar = c("-2", "-1", "0", "1", "2"), grid.min = -2, grid.mid = 0, grid.max = 2)
-
-install.packages("scales")
-library(scales)
-
-
-str(Plant_Diversity_Spider)
-ggradar(Plant_Diversity_Spider, na.rm=TRUE)
-
-
-
-#create the spider graph 
-ggradar(Plant_Diversity_Spider, na.rm=TRUE,
-        font.radar = "sans",
-        values.radar = c(-2, 0, 2),
-        axis.labels = colnames(plot.data)[-1],
-        grid.min = -2,
-        grid.mid = 0,
-        grid.max = 2,
-        centre.y = grid.min - ((1/9) * (grid.max - grid.min)),
-        plot.extent.x.sf = 1,
-        plot.extent.y.sf = 1.2,
-        x.centre.range = 0.02 * (grid.max - centre.y),
-        label.centre.y = FALSE,
-        grid.line.width = 0.5,
-        gridline.min.linetype = "longdash",
-        gridline.mid.linetype = "longdash",
-        gridline.max.linetype = "longdash",
-        gridline.min.colour = "grey",
-        gridline.mid.colour = "#007A87",
-        gridline.max.colour = "grey",
-        grid.label.size = 6,
-        gridline.label.offset = -0.1 * (grid.max - centre.y),
-        label.gridline.min = TRUE,
-        label.gridline.mid = TRUE,
-        label.gridline.max = TRUE,
-        axis.label.offset = 1.15,
-        axis.label.size = 5,
-        axis.line.colour = "grey",
-        group.line.width = 1.5,
-        group.point.size = 6,
-        group.colours = NULL,
-        background.circle.colour = "#D7D6D1",
-        background.circle.transparency = 0.2,
-        plot.legend = if (nrow(plot.data) > 1) TRUE else FALSE,
-        legend.title = "",
-        plot.title = "",
-        legend.text.size = 14,
-        legend.position = "left",
-        fill = FALSE,
-        fill.alpha = 0.5
-)
-
-# Define a new coordinate system 
-coord_radar <- function(...) { 
-  structure(coord_polar(...), class = c("radar", "polar", "coord")) 
-} 
-is.linear.radar <- function(coord) TRUE 
-
-ggplot(Plant_Abundance_Biomass_Taxa_Avg, aes(x = Treatment_Category, y = Mean)) + 
-  geom_path(aes(group = taxonomic_group)) +
-  coord_radar() + facet_wrap(~ model,ncol=4) + 
-  theme(strip.text.x = element_text(size = rel(0.8)), 
-        axis.text.x = element_text(size = rel(0.8))) 
-
 
 ##### Publication Graphs ####
 
@@ -1757,17 +892,13 @@ Abund_Div<-Abund_Div_Abundance %>%
 
 Abund_Div[is.na(Abund_Div)] <- 0
 
-# The palette with grey:
-cbPalette <- c("#999999", "#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00")
-
-
 ResponseVariable_Images<-Abund_Div %>% 
   select(ResponseVariable) %>% 
   unique() %>% 
-  mutate(image = c("https://pixabay.com/get/gabecfb759fd89ff80ee69547d78e0c9309da1147cf5436acbde5d27e0817c1b2a491bb40b5c126393e117ed92c0ed92a_640.png", #arthropod
-                          "https://pixabay.com/get/gded36c96b4f4241c32a5d98b9debbdbdb5ebebbfc7bbe5fec72b1af1522112f7b829ddf2880ab8961ec0a46e320ef3af762499612753702fe6e554118da0f0a0_1920.png", #bird
-                          "https://pixabay.com/get/geaf5245a71b727c41fcf0b3c9d9586da8640f221232362bc46865a80e4c710d4249affe3d358c9ca543eff4c8b905e43_640.png", #plant
-                          "https://pixabay.com/get/gd5439c75f55421299cf657c8d25b8367e0102e941a3ab7cef51a9d71f86a9cc56b581aae3a2ab0727a92c4157723dc5d_640.png", #small Mammal
+  mutate(image = c("https://pixabay.com/get/gede107a6c5c98fed2c1dec22b4aa7b505b79f3546be181ecd086e6ba3fd926ad5bc0452b724354f53b3579b0734c7e2a_640.png", #arthropod
+                          "https://pixabay.com/get/gd12fd2ac121954bb68af3f768eb78b9aaef490f56e9881f9763ea3f8a70bb39e3eaffd99d357602db4a5f66de89adfa2_640.png", #bird
+                          "https://pixabay.com/get/gf890a678cb14f00ea0b793de391e257936eb9def0f321172ffaf0f2334e99ca548b6101c948cf590eca589dba782dcec_640.png", #plant
+                          "https://pixabay.com/get/g37ed8c68c34cef6750eca9922d6c7fc657d8b8b5b920c3d692dab65517836c7e70043ff1422cfdc8cf05e1b5965c6d49_640.png", #small Mammal
                           "https://pixabay.com/get/g080314708fe1c54beacf6ca4c1268e315e65876a9ebc8fd0996f6bcaad4cd73997e7cc80093463dd33d15d0b85d274f8.svg",
                           "https://img.icons8.com/external-bearicons-glyph-bearicons/256/external-Nitrogen-periodic-table-bearicons-glyph-bearicons.png"))
 
@@ -1790,11 +921,11 @@ Abund_Div_Image_Abiotic<-Abund_Div_Image %>%
 
 Fire1yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="1yr"),aes(x=Mean_ab, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
-  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 2, height = 0)+
   geom_image(aes(image=image))+
+  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 2, height = .5)+
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_y_discrete(labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_size_manual(values=c(0.2,0.2,0.2,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_size_manual(values=c(0.2,0.1,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Abundance")+
   ylab("Response Variable")+
   xlim(-5,5)+
@@ -1803,11 +934,11 @@ Fire1yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=
 
 Fire2_4yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="2-4yr"),aes(x=Mean_ab, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
-  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 3, height = 0)+
   geom_image(aes(image=image))+
+  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 2, height = .5)+
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_y_discrete(labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_size_manual(values=c(0.2,0.1,0.2,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_size_manual(values=c(0.2,0.1,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Abundance")+
   ylab("Response Variable")+
   xlim(-10,10)+
@@ -1817,11 +948,11 @@ Fire2_4yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categor
 
 FireGrazing_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="fire + grazing"),aes(x=Mean_ab, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
-  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 2, height = .4)+
   geom_image(aes(image=image))+
+  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 2, height = .5)+
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_y_discrete(labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_size_manual(values=c(0.1,0.1,0.1,0.1,0.1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_size_manual(values=c(0.2,0.1,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Abundance")+
   ylab("Response Variable")+
   xlim(-1,1)+
@@ -1830,11 +961,11 @@ FireGrazing_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categ
 
 Fire1yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="1yr"),aes(x=Mean_div, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
-  geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 2, height = .4)+
   geom_image(aes(image=image))+
+  geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 2, height = .5)+
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_y_discrete(labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_size_manual(values=c(0.1,0.1,0.1,0.1,0.1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_size_manual(values=c(0.2,0.1,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Diversity")+
   ylab("Response Variable")+
   xlim(-40,40)+
@@ -1843,11 +974,11 @@ Fire1yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=
 
 Fire2_4yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="2-4yr"),aes(x=Mean_div, y=ResponseVariable,shape=ResponseVariable, size=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
-  geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 2, height = .4)+
   geom_image(aes(image=image))+
+  geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 2, height = .5)+
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_y_discrete(labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_size_manual(values=c(0.1,0.1,0.1,0.1,0.1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_size_manual(values=c(0.2,0.1,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Diversity")+
   ylab("Response Variable")+
   xlim(-3,3)+
@@ -1857,15 +988,14 @@ Fire2_4yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categor
 
 FireGrazing_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="fire + grazing"),aes(x=Mean_div, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed")+
-  geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 2, height = 0)+
   geom_image(aes(image=image))+
-  geom_jitter()+
+  geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 2, height = .5)+
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_y_discrete(labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_size_manual(values=c(0.1,0.1,0.1,0.1,0.1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_size_manual(values=c(0.2,0.1,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Diversity")+
   ylab("Response Variable")+
-  xlim(-3,3)+
+  xlim(-3,===3)+
   theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position="none")+
   annotate("text", x=-1.2, y=5, label = "F. Fire and Grazing", size=20)
 
