@@ -767,6 +767,14 @@ Data_extraction<-read.csv("Data Extraction/PrescribedFire_DataExtraction_Main.cs
 #Get basic information about data collected so far
 length(unique(Data_extraction$PDF_Study_ID)) #39 unique paper IDs
 
+#determine how many studies are in each fire return interval category
+Data_extraction %>% 
+  select(PDF_Study_ID,Treatment_Category) %>% 
+  unique() %>% 
+  group_by(Treatment_Category) %>% 
+  summarise(Count_Treatment_Cat=n()) %>% 
+  ungroup() #249 data points for 1yr interval, 236 data points for 2-4yr interval, 191 data points for fire+grazing 
+
 #determine how many data points are in each fire return interval category
 Data_extraction %>% 
   group_by(Treatment_Category) %>% 
@@ -859,19 +867,9 @@ ggplot(RR_Calc, aes(x=LnRR, color=Treatment_Category,fill=Treatment_Category))+
   facet_grid(Data_Type ~ ResponseVariable)
 #save at 2000 x 1000
 
-#Make Dataframe for graphs 
-RR_Calc_Avg<-RR_Calc %>% 
-  group_by(ResponseVariable, Treatment_Category, Data_Type) %>%
-  summarize(std=sd(LnRR,na.rm=TRUE),Mean=mean(LnRR,na.rm=TRUE),n=length(LnRR)) %>%
-  mutate(St_Error=std/sqrt(n)) %>% 
-  ungroup()
-
 ##### Publication Graphs ####
 
 #### Plot Abundance * Diversity ####
-
-Abund_Div<-RR_Calc_Avg %>% 
-  spread(key=Data_Type,value=Mean, fill=0)
 
 Abund_Div_Setup<-RR_Calc %>% 
   select(PDF_Study_ID,Study_Point,Treatment_Category, ResponseVariable,Data_Type,LnRR) %>% 
