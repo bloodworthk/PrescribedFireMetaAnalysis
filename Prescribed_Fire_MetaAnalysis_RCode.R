@@ -725,7 +725,6 @@ write.csv(Map_ResponseVariables_LatLong, file = "Map_ResponseVariables_LatLong.c
 
 #load packages
 
-library(lmerTest)
 #install.packages("multcomp")
 library(multcomp)
 #install.packages("data.table")
@@ -734,12 +733,8 @@ library(data.table)
 library(tidyverse)
 #install.packages("devtools")
 library(devtools)
-#devtools::install_github("ricardo-bion/ggradar", dependencies = TRUE)
-library(ggradar)
 #install.packages("ggimage")
 library(ggimage)
-#install.packages("maps")
-library(maps)
 library(patchwork)
 #install.packages("rsvg")
 library(rsvg)
@@ -761,44 +756,59 @@ theme_update(axis.title.x=element_text(size=30, vjust=-0.35, margin=margin(t=15)
              axis.text.x=element_text(size=30), axis.title.y=element_text(size=30, angle=90, vjust=0.5,margin=margin(r=15)), axis.text.y=element_text(size=30), plot.title = element_text(size=30, vjust=2), panel.grid.major=element_blank(), panel.grid.minor=element_blank(), legend.title=element_text(size=30), legend.text=element_text(size=30))
 
 #read in dataframe with data from main extraction
-Data_extraction<-read.csv("Data Extraction/PrescribedFire_DataExtraction_Main.csv")
+Data_extraction<-read.csv("Data Extraction/PrescribedFire_DataExtraction_Main.csv") %>% 
+  #remove north pines, NE site (not TGP)
+  filter(Longitude!=-99.80000) %>% 
+  #make column with latlong together
+  mutate(Lat_Long=paste(Latitude,Longitude,sep="_"))
+  
 
 #### Calculate Methodological Information ####
 #Get basic information about data collected so far
-length(unique(Data_extraction$PDF_Study_ID)) #40 unique paper IDs
+length(unique(Data_extraction$PDF_Study_ID)) #39 unique paper IDs
 
-#determine how many papers are in each fire return interval category
-Fire_categories<-Data_extraction %>% 
+#determine how many data points are in each fire return interval category
+Data_extraction %>% 
   group_by(Treatment_Category) %>% 
   summarise(Count_Treatment_Cat=n()) %>% 
-  ungroup() #255 data points for 1yr interval, 202 data points for 2-4yr interval, 193 data points for fire+grazing 
+  ungroup() #249 data points for 1yr interval, 236 data points for 2-4yr interval, 191 data points for fire+grazing 
+
+#determine how many unique locations there are
+length(unique(Data_extraction$Lat_Long)) #19 unique locations
+
+#determine how many unique locations there are by fire return interval
+Data_extraction %>% 
+  select(Lat_Long,Treatment_Category) %>% 
+  unique() %>% 
+  group_by(Treatment_Category) %>% 
+  summarise(Count_Treatment_Cat=n()) %>% 
+  ungroup() #1 year: 6 unique locations, 2-4yr: 8 unique locations, fire+grazing: 11 unique locations
 
 #Determine how many years the data points came from
-Study_Years<-Data_extraction %>% 
+Data_extraction %>% 
   group_by(Year) %>% 
   summarise(Count_Year=n()) %>% 
   ungroup() 
 
+#determine how many total diversity and abundance studies
+Data_extraction %>% 
+  filter(Response_Variable!="TotalSoilCarbon" & Response_Variable!="TotalSoilNitrogen") %>% 
+  group_by(Data_Type) %>% 
+  summarise(Count_ResponseVariable=n()) %>% 
+  ungroup() 
+
 #Determine how many data points of each response variables
-Response_Variables<-Data_extraction %>% 
+Data_extraction %>% 
   group_by(Response_Variable) %>% 
   summarise(Count_ResponseVariable=n()) %>% 
   ungroup() 
 
 #Determine how many studies of each response variables
-Response_Variables_Study<-Data_extraction %>% 
-  group_by(PDF_Study_ID,Response_Variable) %>% 
-  summarise(Count_StudyID=n()) %>% 
-  ungroup() %>% 
+Data_extraction %>% 
+  select(Response_Variable,PDF_Study_ID) %>% 
+  unique() %>% 
   group_by(Response_Variable) %>% 
   summarise(Count_StudyID_Variable=n())
-
-
-#Removing_Papers<-BasicDataExtraction %>% #83 papers were removed from study
-  #filter(Data.extraction.Screening..nos.=="no") %>% 
-  #select(Reason.for.removing..big.data.extraction.,PDF_Study_ID,Author,Title,Latitude,Longitude,Total_Soil_Carbon,Total_Soil_Nitrogen,Microbial_Biomass,Arthropods,Birds,Small_Mammals,Plants,Data.extraction.Screening..nos.) %>% 
-  #add in column to say if we could extract data from paper based on a 1 year fire return interval as "control" instead of no burn
-  #mutate(One_year_burn=ifelse(PDF_Study_ID==811, "could compare annual to 1 2 year burn",ifelse(PDF_Study_ID==212,"annual vs 4-6 year",ifelse(PDF_Study_ID==760,"annual vs 3yr but data not presented in extractable way",ifelse(PDF_Study_ID==648,"prescribed fire was studied but no context as to interval - check supplimental",ifelse(PDF_Study_ID==437,"One site was annually burned in spring (April) throughout the three years of the study (2000–2002) while the other site was left unburned - both were burned prior to study",ifelse(PDF_Study_ID==458,"annual vs 4 year - KNZ",ifelse(PDF_Study_ID==1146,"annual vs 4 year - KNZ",ifelse(PDF_Study_ID==602, "annual vs 4 year - KNZ", ifelse(PDF_Study_ID==586,"annual vs 4 year - KNZ",ifelse(PDF_Study_ID==966,"annual vs 4 year - KNZ",ifelse(PDF_Study_ID==883,"annual vs 4 year - KNZ",NA))))))))))))
 
 #### Calculate Response Ratio - Hedges' G ####
 
