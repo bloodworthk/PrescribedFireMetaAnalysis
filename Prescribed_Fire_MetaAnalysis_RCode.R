@@ -1027,9 +1027,9 @@ Fire1yr_Abundance+
 #### Soil Nutrients Figure ####
 
 ggplot(data=SoilNutrients, aes(x=Treatment_Category,y=abundance,color=ResponseVariable)) +
-  geom_hline(yintercept=0, linetype="dashed")+
+  geom_hline(yintercept=0, linetype="dashed",color="grey25", size=2)+
   geom_boxplot(lwd=2,position=position_dodge(1))+
-  scale_color_manual(values=c("#a3e2e8","#919191"),labels = c("Total Soil Nitrogen","Total Soil Carbon"), breaks = c("TotalSoilNitrogen","TotalSoilCarbon"),limits=c("TotalSoilNitrogen","TotalSoilCarbon"),name="Soil Nutrients")+
+  scale_color_manual(values=c("darkslategray","darkslategray4"),labels = c("Total Soil Carbon","Total Soil Nitrogen"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilNitrogen","TotalSoilCarbon"),name="Soil Nutrients")+
   scale_x_discrete(labels = c("Annual Fire","2-4 Year Fire","Fire with Grazing"), breaks = c("1yr","2-4yr","fire + grazing"))+
   ylab("LnRR")+
   xlab("Fire Return Interval")+
