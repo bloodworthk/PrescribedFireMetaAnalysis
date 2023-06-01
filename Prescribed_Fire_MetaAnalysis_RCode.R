@@ -818,7 +818,10 @@ RR_by_Hand<-Data_extraction %>%
   mutate(Sample_number_NoBurn=ifelse(Sample_number_NoBurn=="140-150",145,Sample_number_NoBurn)) %>% 
   mutate(Sample_number_Category=ifelse(Sample_number_Category=="140-150",145,Sample_number_Category)) %>% 
   #Remove paper 594 because sample number is not known -  #go back and remove most of this after editing the data
-  filter(PDF_Study_ID!=594 & PDF_Study_ID!=1097 & PDF_Study_ID!=121 & PDF_Study_ID!=453 & PDF_Study_ID!="507d" & PDF_Study_ID!="533v" & PDF_Study_ID!="533p")
+  filter(PDF_Study_ID!=594 & PDF_Study_ID!=1097 & PDF_Study_ID!=121 & PDF_Study_ID!=453 & PDF_Study_ID!="507d" & PDF_Study_ID!="533v" & PDF_Study_ID!="533p") 
+
+#replace typo of abundance 
+RR_by_Hand$Response_Variable<-gsub("Abundace","Abundance", RR_by_Hand$Response_Variable)
 
 RR_by_Hand$Sample_number_Category=as.numeric(RR_by_Hand$Sample_number_Category)
 RR_by_Hand$Sample_number_NoBurn=as.numeric(RR_by_Hand$Sample_number_NoBurn)
@@ -844,8 +847,7 @@ RR_Calc<-RR_by_Hand %>%
   filter(Data_Type!="rarity") %>% 
   group_by(PDF_Study_ID,ResponseVariable,Data_Type,DataType, Treatment_Category) %>% 
   mutate(Study_Point_n=length(Study_Point)) %>% 
-  ungroup() %>% 
-  mutate(DataType=ifelse(DataType=="Abundace", "Abundance",DataType))
+  ungroup()
 
 #### Visualize the data with Histograms ####
 #histogram of all data
@@ -908,10 +910,10 @@ Abund_Div[is.na(Abund_Div)] <- 0
 ResponseVariable_Images<-Abund_Div %>% 
   select(ResponseVariable) %>% 
   unique() %>% 
-  mutate(image = c("https://pixabay.com/get/gfe40384ae50e0f7f9cff14d656815a9dee2c01e81bc7bc04c23931b4dc118044fb4663b372998663b261b495ad33d316_640.png", #arthropod
-                          "https://pixabay.com/get/g25a070980b9d761349a5d6e89181bf3cc41a36e11665578e7de3c5395b7120d7cb86171ae3579442011447bb56143d1d_640.png", #bird
-                          "https://pixabay.com/get/gd007e3afdff548f7a3798195356b910821a4dd85d9479e7ea5e6ec1d0f2b72f91a32ecc84ef264675d41678dda9d315a_640.png", #plant
-                          "https://pixabay.com/get/g40ee03e1f727229647e521055166305497e09e93a85c31318890389c9c34c89bdfebfea5b7be56f7537d2f09585dabd0_640.png", #small Mammal
+  mutate(image = c("https://pixabay.com/get/g62f737c4685073e92844fa5418e568ca183ae365391db78dac252bde2e2a308572ef2ab000f3393c02854b95d8055616_640.png", #arthropod
+                          "https://pixabay.com/get/g8b2b7cdc66d0e5b9298e21cbf371f5b7d7329625d6cb0b2d8c92b9e16f40a99470226f8c87c8de366db923c005af0905_640.png", #bird
+                          "https://pixabay.com/get/gc3dbba2a82a3d6ffedcb624d831362f421c16ee7bfbac8e5dd724ff48c4241bd8735a12fb28b1225e80f5e04c132283e_640.png", #plant
+                          "https://pixabay.com/get/g0187cf40449977ec9aefa8a1863036a131197d65580f90ad970e50f2cabe238b6759638d4df91dfc13e9dab86bba19f6_640.png", #small Mammal
                           "https://pixabay.com/get/g080314708fe1c54beacf6ca4c1268e315e65876a9ebc8fd0996f6bcaad4cd73997e7cc80093463dd33d15d0b85d274f8.svg",
                           "https://img.icons8.com/external-bearicons-glyph-bearicons/256/external-Nitrogen-periodic-table-bearicons-glyph-bearicons.png"))
 
@@ -933,38 +935,38 @@ Abund_Div_Image_Abiotic<-Abund_Div_Image %>%
 #### Diversity and Abundance Figure ####
 
 Fire1yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="1yr"),aes(x=Mean_ab, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
-  geom_vline(xintercept=0, linetype="dashed")+
+  geom_vline(xintercept=0, linetype="dashed",size=2,color="grey25")+
   geom_image(aes(image=image))+
   geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 2, height = .5)+
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_y_discrete(labels = c("Birds (n=0,0)","Arthropods (n=4,2)","Plants (n=142,71)","Small Mammals (n=11,0)",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_y_discrete(labels = c("Birds (n=0,0)","Arthropods (n=4,0)","Plants (n=142,71)","Small Mammals (n=11,0)",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_size_manual(values=c(0.2,0.2,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Abundance")+
   ylab("Response Variable")+
   xlim(-5,5)+
   theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
-  annotate("text", x=-3, y=5, label = "A.Annual Fire", size=20)
+  annotate("text", x=-2.8, y=5, label = "A. Annual Fire", size=20)
 
 Fire2_4yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="2-4yr"),aes(x=Mean_ab, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
-  geom_vline(xintercept=0, linetype="dashed")+
+  geom_vline(xintercept=0, linetype="dashed",size=2,color="grey25")+
   geom_image(aes(image=image))+
   geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 2, height = .5)+
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_y_discrete(labels = c("Birds (n=1,3)","Arthropods (n=30,4)","Plants (n=144,26)","Small Mammals (n=2,0)",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_y_discrete(labels = c("Birds (n=1,3)","Arthropods (n=30,2)","Plants (n=144,26)","Small Mammals (n=2,0)",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_size_manual(values=c(0.2,0.2,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Abundance")+
   ylab("Response Variable")+
   xlim(-10,10)+
   theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
-  annotate("text", x=-2.5, y=5, label = "C.2-4 Year Fire Regime", size=20)
+  annotate("text", x=-2.2, y=5, label = "C. 2-4 Year Fire Regime", size=20)
 
 
 FireGrazing_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="fire + grazing"),aes(x=Mean_ab, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
-  geom_vline(xintercept=0, linetype="dashed")+
+  geom_vline(xintercept=0, linetype="dashed",size=2,color="grey25")+
   geom_image(aes(image=image))+
   geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 2, height = .5)+
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_y_discrete(labels = c("Birds (n=22,0)","Arthropods (n=28,6)","Plants (n=50,44)","Small Mammals (n=0,0)",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_y_discrete(labels = c("Birds (n=22,0)","Arthropods (n=28,4)","Plants (n=50,44)","Small Mammals (n=0,0)",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_size_manual(values=c(0.2,0.2,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Abundance")+
   ylab("Response Variable")+
@@ -973,7 +975,7 @@ FireGrazing_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categ
   annotate("text", x=-0.4, y=5, label = "E. Fire with Grazing", size=20)
 
 Fire1yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="1yr"),aes(x=Mean_div, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
-  geom_vline(xintercept=0, linetype="dashed")+
+  geom_vline(xintercept=0, linetype="dashed",size=2,color="grey25")+
   geom_image(aes(image=image))+
   geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 2, height = .5)+
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
@@ -983,10 +985,10 @@ Fire1yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=
   ylab("Response Variable")+
   xlim(-40,40)+
   theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
-  annotate("text", x=-24, y=5, label = "B.Annual Fire", size=20)
+  annotate("text", x=-22, y=5, label = "B. Annual Fire", size=20)
 
 Fire2_4yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="2-4yr"),aes(x=Mean_div, y=ResponseVariable,shape=ResponseVariable, size=ResponseVariable)) +
-  geom_vline(xintercept=0, linetype="dashed")+
+  geom_vline(xintercept=0, linetype="dashed",size=2, color="grey25")+
   geom_image(aes(image=image))+
   geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 2, height = .5)+
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
@@ -994,13 +996,13 @@ Fire2_4yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categor
   scale_size_manual(values=c(0.2,0.2,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Diversity")+
   ylab("Response Variable")+
-  xlim(-3,3)+
+  xlim(-4,4)+
   theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
-  annotate("text", x=-0.7, y=5, label = "D.2-4 Year Fire Regime", size=20)
+  annotate("text", x=-0.9, y=5, label = "D. 2-4 Year Fire Regime", size=20)
 
 
 FireGrazing_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="fire + grazing"),aes(x=Mean_div, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
-  geom_vline(xintercept=0, linetype="dashed")+
+  geom_vline(xintercept=0, linetype="dashed",size=2,color="grey25")+
   geom_image(aes(image=image))+
   geom_errorbarh(aes(xmin=lowerinterval_div,xmax=upperinterval_div), size = 2, height = .5)+
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
@@ -1008,9 +1010,9 @@ FireGrazing_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categ
   scale_size_manual(values=c(0.2,0.2,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Diversity")+
   ylab("Response Variable")+
-  xlim(-3,3)+
+  xlim(-5,5)+
   theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position="none")+
-  annotate("text", x=-1.2, y=5, label = "F. Fire with Grazing", size=20)
+  annotate("text", x=-1.9, y=5, label = "F. Fire with Grazing", size=20)
 
 
 Fire1yr_Abundance+
