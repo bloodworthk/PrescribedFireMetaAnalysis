@@ -1033,7 +1033,7 @@ ggplot(data=SoilNutrients, aes(y=Treatment_Category,x=abundance,color=ResponseVa
   geom_vline(xintercept=0, linetype="dashed",color="grey25", size=2)+
   geom_boxplot(lwd=2,position=position_dodge(1))+
   scale_color_manual(values=c("darkslategray","darkslategray4"),labels = c("Total Soil Carbon","Total Soil Nitrogen"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilNitrogen","TotalSoilCarbon"),name="Soil Nutrients")+
-  scale_y_discrete(labels = c("Annual Fire","2-4 Year Fire","Fire with Grazing"), breaks = c("1yr","2-4yr","fire + grazing"),limits=c("fire + grazing","2-4yr","1yr"))+
+  scale_y_discrete(labels = c("Annual Fire (3,4)","2-4 Year Fire (1,1)","Fire with Grazing (2,2)"), breaks = c("1yr","2-4yr","fire + grazing"),limits=c("fire + grazing","2-4yr","1yr"))+
   xlab(x_title)+
   ylab("Fire Return Interval")+
   xlim(-4,4)+
