@@ -937,6 +937,11 @@ Abund_Div_Image_Biotic<-Abund_Div_Image %>%
 Abund_Div_Image_Abiotic<-Abund_Div_Image %>% 
   filter(ResponseVariable!="Arthropod"& ResponseVariable!="Bird" & ResponseVariable!="Plant"& ResponseVariable!="SmallMammal")
 
+#create x axis title for figures
+x_title <- expression(paste("Mean Effect Size (Hedges' ", italic("g"), ")"))
+x_title_ab <- expression(paste("Mean Effect Size (Hedges' ", italic("g"), ") Abundance"))
+x_title_div <- expression(paste("Mean Effect Size (Hedges' ", italic("g"), ") Diversi"))
+
 #### Diversity and Abundance Figure ####
 
 Fire1yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=="1yr"),aes(x=Mean_ab, y=ResponseVariable,shape=ResponseVariable,size=ResponseVariable)) +
@@ -951,7 +956,7 @@ Fire1yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=
                        "Small Mammals (n=11,0)"
                        ,""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_size_manual(values=c(0.2,0.2,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  xlab("LnRR of Abundance")+
+  xlab(x_title_ab)+
   ylab("Response Variable")+
   xlim(-5,5)+
   theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
@@ -968,7 +973,7 @@ Fire2_4yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categor
                               "Small Mammals (n=2,0)",
                               ""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_size_manual(values=c(0.2,0.2,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  xlab("LnRR of Abundance")+
+  xlab(x_title_ab)+
   ylab("Response Variable")+
   xlim(-10,10)+
   theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
@@ -986,7 +991,7 @@ FireGrazing_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categ
                               "Small Mammals (n=0,0)",
                               ""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_size_manual(values=c(0.2,0.2,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  xlab("LnRR of Abundance")+
+  xlab(x_title_ab)+
   ylab("Response Variable")+
   xlim(-1,1)+
   theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position="none")+
@@ -999,7 +1004,7 @@ Fire1yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_y_discrete(labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_size_manual(values=c(0.2,0.2,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  xlab("LnRR of Diversity")+
+  xlab(x_title_div)+
   ylab("Response Variable")+
   xlim(-40,40)+
   theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
@@ -1012,7 +1017,7 @@ Fire2_4yr_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categor
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_y_discrete(labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_size_manual(values=c(0.2,0.2,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  xlab("LnRR of Diversity")+
+  xlab(x_title_div)+
   ylab("Response Variable")+
   xlim(-4,4)+
   theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_blank(),legend.position="none")+
@@ -1026,7 +1031,7 @@ FireGrazing_Diversity<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categ
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_y_discrete(labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_size_manual(values=c(0.2,0.2,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  xlab("LnRR of Diversity")+
+  xlab(x_title_div)+
   ylab("Response Variable")+
   xlim(-5,5)+
   theme(axis.text.y=element_blank(),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.position="none")+
@@ -1044,16 +1049,16 @@ Fire1yr_Abundance+
 
 #### Soil Nutrients Figure ####
 
-ggplot(data=SoilNutrients, aes(x=Treatment_Category,y=abundance,color=ResponseVariable)) +
-  geom_hline(yintercept=0, linetype="dashed",color="grey25", size=2)+
+ggplot(data=SoilNutrients, aes(y=Treatment_Category,x=abundance,color=ResponseVariable)) +
+  geom_vline(xintercept=0, linetype="dashed",color="grey25", size=2)+
   geom_boxplot(lwd=2,position=position_dodge(1))+
   scale_color_manual(values=c("darkslategray","darkslategray4"),labels = c("Total Soil Carbon","Total Soil Nitrogen"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilNitrogen","TotalSoilCarbon"),name="Soil Nutrients")+
-  scale_x_discrete(labels = c("Annual Fire","2-4 Year Fire","Fire with Grazing"), breaks = c("1yr","2-4yr","fire + grazing"))+
-  ylab("LnRR")+
-  xlab("Fire Return Interval")+
-  ylim(-4,4)+
-  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_text(size=55),axis.title.x=element_text(size=55),legend.text=element_text(size=40),legend.title=element_blank(),legend.position = c(0.18,0.88),legend.key = element_rect(size=30), legend.key.size = unit(7.0, 'lines'))
-#save at 2000x1500
+  scale_y_discrete(labels = c("Annual Fire (3,4)","2-4 Year Fire (1,1)","Fire with Grazing (2,2)"), breaks = c("1yr","2-4yr","fire + grazing"),limits=c("fire + grazing","2-4yr","1yr"))+
+  xlab(x_title)+
+  ylab("Fire Return Interval")+
+  xlim(-4,4)+
+  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_text(size=55),axis.title.x=element_text(size=55),legend.text=element_text(size=40),legend.title=element_blank(),legend.position = c(0.2,0.15),legend.key = element_rect(size=30), legend.key.size = unit(7.0, 'lines'))
+#save at 2500x1500
   
 
 
