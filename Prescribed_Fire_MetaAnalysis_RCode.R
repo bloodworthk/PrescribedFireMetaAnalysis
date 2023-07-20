@@ -822,11 +822,11 @@ Data_extraction %>%
 
 #Response Ratio by Hand
 RR_by_Hand<-Data_extraction %>% 
-  #take mean of sample numbers that gave a range 
-  mutate(Sample_number_NoBurn=ifelse(Sample_number_NoBurn=="140-150",145,Sample_number_NoBurn)) %>% 
-  mutate(Sample_number_Category=ifelse(Sample_number_Category=="140-150",145,Sample_number_Category)) %>% 
-  #Remove paper 594 because sample number is not known -  #go back and remove most of this after editing the data
-  filter(PDF_Study_ID!=594 & PDF_Study_ID!=1097 & PDF_Study_ID!=121 & PDF_Study_ID!=453 & PDF_Study_ID!="507d" & PDF_Study_ID!="533v" & PDF_Study_ID!="533p") 
+  #merge PDF_Study_ID and Study point together in order to filter
+  mutate(Study_ID=paste(PDF_Study_ID,Study_Point,sep="")) %>% 
+  #Remove paper 507 point d & 533 point v & 533 point p because there was no standard error reported or error bar was unable to be measured. Remove 217 because there are no standard error
+  filter(Study_ID!="507d" & Study_ID!="533v" & Study_ID!="533p" & PDF_Study_ID!="217") %>% 
+  select(-c(Figure_Number_panel,Table_Number,ConfidenceInterval_95,ConfidenceInterval_95.1,Standard_Deviation_NoBurn,Standard_Deviation_Category,Q1_control,median..Q2._control,Q3_control,Q1_trt,median..Q2._trt,Q3_trt))
 
 #replace typo of abundance 
 RR_by_Hand$Response_Variable<-gsub("Abundace","Abundance", RR_by_Hand$Response_Variable)
@@ -856,6 +856,13 @@ RR_Calc<-RR_by_Hand %>%
   group_by(PDF_Study_ID,ResponseVariable,Data_Type,DataType, Treatment_Category) %>% 
   mutate(Study_Point_n=length(Study_Point)) %>% 
   ungroup()
+
+#Create dataframe with just paper information for all papers being used in final study
+#papers <- RR_Calc %>% 
+ # select(PDF_Study_ID,Author,Year,ResponseVariable,DataType) %>% 
+#  unique()
+
+#write.csv(papers,"PrescribedFire_Papers_Final.csv")
 
 #### Visualize the data with Histograms ####
 #histogram of all data
@@ -908,10 +915,10 @@ Abund_Div[is.na(Abund_Div)] <- 0
 ResponseVariable_Images<-Abund_Div %>% 
   select(ResponseVariable) %>% 
   unique() %>% 
-  mutate(image = c("https://pixabay.com/get/g62f737c4685073e92844fa5418e568ca183ae365391db78dac252bde2e2a308572ef2ab000f3393c02854b95d8055616_640.png", #arthropod
-                          "https://pixabay.com/get/g8b2b7cdc66d0e5b9298e21cbf371f5b7d7329625d6cb0b2d8c92b9e16f40a99470226f8c87c8de366db923c005af0905_640.png", #bird
-                          "https://pixabay.com/get/gc3dbba2a82a3d6ffedcb624d831362f421c16ee7bfbac8e5dd724ff48c4241bd8735a12fb28b1225e80f5e04c132283e_640.png", #plant
-                          "https://pixabay.com/get/g0187cf40449977ec9aefa8a1863036a131197d65580f90ad970e50f2cabe238b6759638d4df91dfc13e9dab86bba19f6_640.png", #small Mammal
+  mutate(image = c("https://pixabay.com/get/gcc58d21e338785f6bc3ce32b6f8bbc29e1eacb0b07916b6458a10ab699b901680c0cd59e1b68682d5abc1bb27d88f6246be162106cd01bf015e3824dd6ccb5da5b850015720f60f00a3be33facb330fe_640.png", #arthropod
+                          "https://pixabay.com/get/g676e43299c160e426b719d5cb76e9fd9dfbb4f1f4a5a883e714d5abd27bc4772d93aa3fea0132c0b6367d22d4f8f7f2a6cdef77357d1572fb71c87c9caf3b496a6ce418a8304fe4bb441651b6839f7ca_640.png", #bird
+                          "https://pixabay.com/get/g5d7aece9c4135020e0f557aa671a0f2cc9405448fb418c6f69ab85dceb27498ea1eee3f4e6821e26d296aea20d4dbae23cd3b2f31e9987ace5779044f8da3340c6b4126c4734d23c7c19bd952d2e7af5_640.png", #plant
+                          "https://pixabay.com/get/ge9e96bfaea7ca583060e2d4034cc66bbf2b4c2a12559be32be44a477cab8500675b5798bd98fae0a642f0ea8e1842907dee2125d3cc41af0346a2f4853167dc22d9224bfab053b3983d2c5a75dd7d28e_640.png", #small Mammal
                           "https://pixabay.com/get/g080314708fe1c54beacf6ca4c1268e315e65876a9ebc8fd0996f6bcaad4cd73997e7cc80093463dd33d15d0b85d274f8.svg",
                           "https://img.icons8.com/external-bearicons-glyph-bearicons/256/external-Nitrogen-periodic-table-bearicons-glyph-bearicons.png"))
 
@@ -937,7 +944,12 @@ Fire1yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Category=
   geom_image(aes(image=image))+
   geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 2, height = .5)+
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_y_discrete(labels = c("Birds (n=0,0)","Arthropods (n=4,0)","Plants (n=142,71)","Small Mammals (n=11,0)",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_y_discrete(labels =
+                     c("Birds (n=0,0)",
+                       "Arthropods (n=4,0)",
+                       "Plants (n=154,71)",
+                       "Small Mammals (n=11,0)"
+                       ,""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_size_manual(values=c(0.2,0.2,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Abundance")+
   ylab("Response Variable")+
@@ -950,7 +962,11 @@ Fire2_4yr_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categor
   geom_image(aes(image=image))+
   geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 2, height = .5)+
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_y_discrete(labels = c("Birds (n=1,3)","Arthropods (n=30,2)","Plants (n=144,26)","Small Mammals (n=2,0)",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_y_discrete(labels = c("Birds (n=1,3)",
+                              "Arthropods (n=30,2)",
+                              "Plants (n=160,26)",
+                              "Small Mammals (n=2,0)",
+                              ""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_size_manual(values=c(0.2,0.2,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Abundance")+
   ylab("Response Variable")+
@@ -964,7 +980,11 @@ FireGrazing_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categ
   geom_image(aes(image=image))+
   geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), size = 2, height = .5)+
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
-  scale_y_discrete(labels = c("Birds (n=22,0)","Arthropods (n=28,4)","Plants (n=50,44)","Small Mammals (n=0,0)",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
+  scale_y_discrete(labels = c("Birds (n=22,0)",
+                              "Arthropods (n=28,4)",
+                              "Plants (n=74,44)",
+                              "Small Mammals (n=0,0)",
+                              ""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_size_manual(values=c(0.2,0.2,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   xlab("LnRR of Abundance")+
   ylab("Response Variable")+
