@@ -824,8 +824,8 @@ Data_extraction %>%
 RR_by_Hand<-Data_extraction %>% 
   #merge PDF_Study_ID and Study point together in order to filter
   mutate(Study_ID=paste(PDF_Study_ID,Study_Point,sep="")) %>% 
-  #Remove paper 507 point d & 533 point v & 533 point p because there was no standard error reported or error bar was unable to be measured. Remove 217 because there are no standard error
-  filter(Study_ID!="507d" & Study_ID!="533v" & Study_ID!="533p" & PDF_Study_ID!="217") %>% 
+  #Remove paper 507 point d & 533 point v & 533 point p because there was no standard error reported or error bar was unable to be measured. Remove 217 because there are no standard error. Removing 996 becuase it was not exclusively TGP range
+  filter(Study_ID!="507d" & Study_ID!="533v" & Study_ID!="533p" & PDF_Study_ID!="217" & PDF_Study_ID!="996") %>% 
   select(-c(Figure_Number_panel,Table_Number,ConfidenceInterval_95,ConfidenceInterval_95.1,Standard_Deviation_NoBurn,Standard_Deviation_Category,Q1_control,median..Q2._control,Q3_control,Q1_trt,median..Q2._trt,Q3_trt))
 
 #replace typo of abundance 
@@ -987,7 +987,7 @@ FireGrazing_Abundance<-ggplot(data=subset(Abund_Div_Image_Biotic,Treatment_Categ
   scale_shape_manual(values=c(15,16,17,21,1),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_y_discrete(labels = c("Birds (n=22,0)",
                               "Arthropods (n=28,4)",
-                              "Plants (n=74,44)",
+                              "Plants (n=68,44)",
                               "Small Mammals (n=0,0)",
                               ""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
   scale_size_manual(values=c(0.2,0.2,0.1,0.2,0.2),labels = c("Birds","Arthropods","Plants","Small Mammals",""), breaks = c("Bird","Arthropod","Plant","SmallMammal",""),limits=c('SmallMammal','Plant','Bird','Arthropod',''),drop = FALSE)+
