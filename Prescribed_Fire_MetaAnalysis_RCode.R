@@ -739,6 +739,7 @@ library(patchwork)
 #install.packages("rsvg")
 library(rsvg)
 library(vegan) 
+library(ggstance)
 
 #### Read in Data ####
 
@@ -915,12 +916,12 @@ Abund_Div[is.na(Abund_Div)] <- 0
 ResponseVariable_Images<-Abund_Div %>% 
   select(ResponseVariable) %>% 
   unique() %>% 
-  mutate(image = c("https://pixabay.com/get/gcc58d21e338785f6bc3ce32b6f8bbc29e1eacb0b07916b6458a10ab699b901680c0cd59e1b68682d5abc1bb27d88f6246be162106cd01bf015e3824dd6ccb5da5b850015720f60f00a3be33facb330fe_640.png", #arthropod
-                          "https://pixabay.com/get/g676e43299c160e426b719d5cb76e9fd9dfbb4f1f4a5a883e714d5abd27bc4772d93aa3fea0132c0b6367d22d4f8f7f2a6cdef77357d1572fb71c87c9caf3b496a6ce418a8304fe4bb441651b6839f7ca_640.png", #bird
-                          "https://pixabay.com/get/g5d7aece9c4135020e0f557aa671a0f2cc9405448fb418c6f69ab85dceb27498ea1eee3f4e6821e26d296aea20d4dbae23cd3b2f31e9987ace5779044f8da3340c6b4126c4734d23c7c19bd952d2e7af5_640.png", #plant
-                          "https://pixabay.com/get/ge9e96bfaea7ca583060e2d4034cc66bbf2b4c2a12559be32be44a477cab8500675b5798bd98fae0a642f0ea8e1842907dee2125d3cc41af0346a2f4853167dc22d9224bfab053b3983d2c5a75dd7d28e_640.png", #small Mammal
-                          "https://pixabay.com/get/g080314708fe1c54beacf6ca4c1268e315e65876a9ebc8fd0996f6bcaad4cd73997e7cc80093463dd33d15d0b85d274f8.svg",
-                          "https://img.icons8.com/external-bearicons-glyph-bearicons/256/external-Nitrogen-periodic-table-bearicons-glyph-bearicons.png"))
+  mutate(image = c("https://pixabay.com/get/g674f1a25d8abb04fe84c3813465802ef399474eabf95485e0f590d9e17306785c1bbf0dd9379954c738f28a381795881b4d8b5d626592df47dc21e6d4a74c85c770c34a54ca39f72f8ba0fce9c65bcd5_640.png", #arthropod
+                          "https://pixabay.com/get/gf4a2e41013433d30bcc7555e48191e49a702cf79e61c990a30801a142391aa1bf114f2faf88bfa504c8113ba20b5da558815e284bfd2c36c60723f6502f17b99d2784030c1edb96dbd63fc15f20abeef_640.png", #bird
+                          "https://pixabay.com/get/g252a827e4587cb862bb8c1a161b659bdda125a7ef45ff9bc0bb337768eec9702b8c6f6e5ec97f8e05cb2b312cb4be3bd03884c694ad9f0fa0bf49d97e4fabcea4b14941a2584179b9463f181f1e2c9b0_640.png", #plant
+                          "https://pixabay.com/get/g228640fee3e6bf56d8b8be7be075a5cfe38010ad845ae24c298d8ae31895ce77d42c992b53ac4dbb7ab788720a7adac97405ab3e930d5b1b56e793ea53091f13c8e0fde91fb8b8745da4758a799594e4_640.png", #small Mammal
+                          "https://pixabay.com/get/g4470c44ec7692c61a0ffb7a0ddb8df4d8c291d8c410cf8b7a3fe2e1772c6d10176f46d9914a9649f2e8025622687a2a16dcbe0e25cb6a464f383b8c332c5bd394d2678b156a03d2131b5cd5152f1ef7e_640.png", #carbon
+                          "https://pixabay.com/get/gda9cff4fb4c7af348079f714c44341d543ba3e2bb4bc83b2726244af62075ca8ba40dcd7cf021f1fe428437566b6087da51b2fd494136888409868ae2cfbd1593a4c1c5c334b338366e9f2f8c130f287_640.png")) #nitrogen))
 
 
 Abund_Div_Image<-Abund_Div %>% 
@@ -1047,19 +1048,62 @@ Fire1yr_Abundance+
   plot_layout(ncol = 2,nrow = 3)#save at 3000 x 3000
 
 
+
 #### Soil Nutrients Figure ####
 
-ggplot(data=SoilNutrients, aes(y=Treatment_Category,x=abundance,color=ResponseVariable)) +
+
+geom_point(position=position_jitter(width=0.1,height=0.5),size=1)
+
+
+Abund_Div_Image_Abiotic <- Abund_Div_Image_Abiotic %>% 
+  mutate(Treatment=paste(Treatment_Category,ResponseVariable,sep=".")) %>% 
+  ungroup() %>% 
+  mutate(Treatment=ifelse(Treatment_Category=="1yr",1,ifelse(Treatment_Category=="2-4yr",2,3)))
+
+###Cant figure out how to get position of points to dodge vertically. tried position dodge, fill, stack, identity
+ggplot(data=Abund_Div_Image_Abiotic,aes(x=Mean_ab, y=Treatment,fill=ResponseVariable)) +
+  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_text(size=55),axis.title.x=element_text(size=55))+
+  geom_vline(xintercept=0, linetype="dashed",size=2,color="grey25")+
+  geom_image(aes(image=image,fill=Treatment_Category), size=0.1,position=position_dodge(width=1))+
+  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab),position=position_jitter(), size = 2, height = 0.5)+
+  
+  geom_image(aes(image=image),position=position_jitter(width=1,height=1), size=0.1)+
+  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), position=position_dodge(0), size = 2, height = 0.5)+
+  scale_shape_manual(values=c(15,16),labels = c("TSC","TSN"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilCarbon","TotalSoilNitrogen"),name="Soil Nutrients",drop = FALSE)+
+  scale_y_discrete(labels = c("TSC","TSN"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilCarbon","TotalSoilNitrogen"),name="Soil Nutrients",drop = FALSE)+
+  scale_size_manual(values=c(0.2,0.2),labels = c("TSC","TSN"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilCarbon","TotalSoilNitrogen"),name="Soil Nutrients",drop = FALSE)+
+  scale_fill_manual(values=c("red","green","yellow"),labels = c("Annual Fire Regime (3,4)",
+                                                                 "2-4 Year Regime Fire (1,1)",
+                                                                 "Fire Regime with Grazing (2,2)"), 
+                    breaks = c("1yr","2-4yr","fire + grazing"),
+                    limits=c("fire + grazing","2-4yr","1yr"),drop = FALSE)+
+  #xlab(x_title_div)+
+  ylab("Response Variable")+
+  xlim(-5,5)+
+
+  annotate("text", x=-1.9, y=5, label = "F. Fire with Grazing", size=20)
+
+
+ggplot(data=Abund_Div_Image_Abiotic,aes(y=Mean_ab, x=Treatment,fill=ResponseVariable)) +
+  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_text(size=55),axis.title.x=element_text(size=55))+
+  geom_hline(yintercept=0, linetype="dashed",size=2,color="grey25")+
+  geom_image(aes(image=image,fill=Treatment_Category),position=position_stack(vhust=0.5), size=0.1)+
+  geom_errorbar(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab),position_stack(vjust=0.5), size = 2, height = 0.5)
+
+
+
+ggplot(data[order(SoilNutrients$ResoponseVariable), ], aes(y=Treatment_Category,x=abundance,color=ResponseVariable, fill=ResponseVariable)) +
   geom_vline(xintercept=0, linetype="dashed",color="grey25", size=2)+
   geom_boxplot(lwd=2,position=position_dodge(1))+
-  scale_color_manual(values=c("darkslategray","darkslategray4"),labels = c("Total Soil Carbon","Total Soil Nitrogen"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilNitrogen","TotalSoilCarbon"),name="Soil Nutrients")+
-  scale_y_discrete(labels = c("Annual Fire (3,4)",
-                              "2-4 Year Fire (1,1)",
-                              "Fire with Grazing (2,2)"), breaks = c("1yr","2-4yr","fire + grazing"),limits=c("fire + grazing","2-4yr","1yr"))+
+  scale_color_manual(values=c("darkslategray","darkslategray4"),labels = c("TSC","TSN"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilCarbon","TotalSoilNitrogen"),name="Soil Nutrients")+
+  scale_fill_manual(values=c("lightgrey","white"),labels = c("TSC","TSN"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilCarbon","TotalSoilNitrogen"),name="Soil Nutrients")+
+  scale_y_discrete(labels = c("Annual Fire Regime (3,4)",
+                              "2-4 Year Regime Fire (1,1)",
+                              "Fire Regime with Grazing (2,2)"), breaks = c("1yr","2-4yr","fire + grazing"),limits=c("fire + grazing","2-4yr","1yr"))+
   #xlab(x_title)+
   ylab("Fire Return Interval")+
   xlim(-4,4)+
-  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_text(size=55),axis.title.x=element_text(size=55),legend.text=element_text(size=40),legend.title=element_blank(),legend.position = c(0.2,0.15),legend.key = element_rect(size=30), legend.key.size = unit(7.0, 'lines'))
+  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.text=element_text(size=40),legend.title=element_blank(),legend.position = c(0.9,0.88),legend.key = element_rect(size=30), legend.key.size = unit(7.0, 'lines'))
 #save at 2500x1500
   
 
