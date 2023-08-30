@@ -521,6 +521,9 @@ CraterLakepal <- park_palette("CraterLake", 7)
 #working directory - KB - Mac
 setwd("~/Library/CloudStorage/Box-Box/TNC_TGP_RxFire/Data")
 
+#working directory - KB - PC
+setwd("/Users/kjbloodw/Box/TNC_TGP_RxFire/Data")
+
 #### Set ggplot base ####
 #Set ggplot2 theme to black and white
 theme_set(theme_bw())
@@ -770,7 +773,7 @@ length(unique(Data_extraction$PDF_Study_ID)) #39 unique paper IDs
 
 #determine how many studies are in each fire return interval category
 Data_extraction %>% 
-  select(PDF_Study_ID,Treatment_Category) %>% 
+  dplyr::select(PDF_Study_ID,Treatment_Category) %>% 
   unique() %>% 
   group_by(Treatment_Category) %>% 
   summarise(Count_Treatment_Cat=n()) %>% 
@@ -787,7 +790,7 @@ length(unique(Data_extraction$Lat_Long)) #19 unique locations
 
 #determine how many unique locations there are by fire return interval
 Data_extraction %>% 
-  select(Lat_Long,Treatment_Category) %>% 
+  dplyr::select(Lat_Long,Treatment_Category) %>% 
   unique() %>% 
   group_by(Treatment_Category) %>% 
   summarise(Count_Treatment_Cat=n()) %>% 
@@ -814,7 +817,7 @@ Data_extraction %>%
 
 #Determine how many studies of each response variables
 Data_extraction %>% 
-  select(Response_Variable,PDF_Study_ID) %>% 
+  dplyr::select(Response_Variable,PDF_Study_ID) %>% 
   unique() %>% 
   group_by(Response_Variable) %>% 
   summarise(Count_StudyID_Variable=n())
@@ -827,7 +830,7 @@ RR_by_Hand<-Data_extraction %>%
   mutate(Study_ID=paste(PDF_Study_ID,Study_Point,sep="")) %>% 
   #Remove paper 507 point d & 533 point v & 533 point p because there was no standard error reported or error bar was unable to be measured. Remove 217 because there are no standard error. Removing 996 becuase it was not exclusively TGP range
   filter(Study_ID!="507d" & Study_ID!="533v" & Study_ID!="533p" & PDF_Study_ID!="217" & PDF_Study_ID!="996") %>% 
-  select(-c(Figure_Number_panel,Table_Number,ConfidenceInterval_95,ConfidenceInterval_95.1,Standard_Deviation_NoBurn,Standard_Deviation_Category,Q1_control,median..Q2._control,Q3_control,Q1_trt,median..Q2._trt,Q3_trt))
+  dplyr::select(-c(Figure_Number_panel,Table_Number,ConfidenceInterval_95,ConfidenceInterval_95.1,Standard_Deviation_NoBurn,Standard_Deviation_Category,Q1_control,median..Q2._control,Q3_control,Q1_trt,median..Q2._trt,Q3_trt))
 
 #replace typo of abundance 
 RR_by_Hand$Response_Variable<-gsub("Abundace","Abundance", RR_by_Hand$Response_Variable)
@@ -880,14 +883,14 @@ ggplot(RR_Calc, aes(x=LnRR, color=Treatment_Category,fill=Treatment_Category))+
 #### Plot Abundance * Diversity ####
 
 Abund_Div_Setup<-RR_Calc %>% 
-  select(PDF_Study_ID,Study_Point,Treatment_Category, ResponseVariable,Data_Type,LnRR) %>% 
+  dplyr::select(PDF_Study_ID,Study_Point,Treatment_Category, ResponseVariable,Data_Type,LnRR) %>% 
   spread(key=Data_Type,value=LnRR, fill=NA) 
 
 SoilNutrients<-Abund_Div_Setup %>% 
   filter(ResponseVariable!="Arthropod"& ResponseVariable!="Bird" & ResponseVariable!="Plant"& ResponseVariable!="SmallMammal")
 
 Abund_Div_Abundance<-Abund_Div_Setup %>% 
-  select(-diversity) %>% 
+  dplyr::select(-diversity) %>% 
   na.omit(abundance) %>% 
   group_by(ResponseVariable, Treatment_Category) %>%
   summarize(std_ab=sd(abundance,na.rm=TRUE),Mean_ab=mean(abundance,na.rm=TRUE),n_ab=length(abundance)) %>%
@@ -898,7 +901,7 @@ Abund_Div_Abundance<-Abund_Div_Setup %>%
   ungroup() 
 
 Abund_Div_Diversity<-Abund_Div_Setup %>% 
-  select(-abundance) %>% 
+  dplyr::select(-abundance) %>% 
   na.omit(diversity) %>% 
   group_by(ResponseVariable, Treatment_Category) %>%
   summarize(std_div=sd(diversity,na.rm=TRUE),Mean_div=mean(diversity,na.rm=TRUE),n_div=length(diversity)) %>%
@@ -914,19 +917,19 @@ Abund_Div<-Abund_Div_Abundance %>%
 Abund_Div[is.na(Abund_Div)] <- 0
 
 ResponseVariable_Images<-Abund_Div %>% 
-  select(ResponseVariable) %>% 
+  dplyr::select(ResponseVariable) %>% 
   unique() %>% 
   mutate(image = c("https://pixabay.com/get/g674f1a25d8abb04fe84c3813465802ef399474eabf95485e0f590d9e17306785c1bbf0dd9379954c738f28a381795881b4d8b5d626592df47dc21e6d4a74c85c770c34a54ca39f72f8ba0fce9c65bcd5_640.png", #arthropod
                           "https://pixabay.com/get/gf4a2e41013433d30bcc7555e48191e49a702cf79e61c990a30801a142391aa1bf114f2faf88bfa504c8113ba20b5da558815e284bfd2c36c60723f6502f17b99d2784030c1edb96dbd63fc15f20abeef_640.png", #bird
                           "https://pixabay.com/get/g252a827e4587cb862bb8c1a161b659bdda125a7ef45ff9bc0bb337768eec9702b8c6f6e5ec97f8e05cb2b312cb4be3bd03884c694ad9f0fa0bf49d97e4fabcea4b14941a2584179b9463f181f1e2c9b0_640.png", #plant
                           "https://pixabay.com/get/g228640fee3e6bf56d8b8be7be075a5cfe38010ad845ae24c298d8ae31895ce77d42c992b53ac4dbb7ab788720a7adac97405ab3e930d5b1b56e793ea53091f13c8e0fde91fb8b8745da4758a799594e4_640.png", #small Mammal
-                          "https://pixabay.com/get/g4470c44ec7692c61a0ffb7a0ddb8df4d8c291d8c410cf8b7a3fe2e1772c6d10176f46d9914a9649f2e8025622687a2a16dcbe0e25cb6a464f383b8c332c5bd394d2678b156a03d2131b5cd5152f1ef7e_640.png", #carbon
-                          "https://pixabay.com/get/gda9cff4fb4c7af348079f714c44341d543ba3e2bb4bc83b2726244af62075ca8ba40dcd7cf021f1fe428437566b6087da51b2fd494136888409868ae2cfbd1593a4c1c5c334b338366e9f2f8c130f287_640.png")) #nitrogen))
+                          "https://pixabay.com/get/gb8bdf7d9a558f156b37885dd6cbc4a09863cf6782f981a8cdca7808c456805491783a36ad7b8afe378f1e85562c7c7c957741b2bac0b4169ef8e197eecfa7aedcca1c2f4bd026995632cdd0b3434d7d3_640.png", #carbon
+                          "https://img.icons8.com/glyph-neue/64/nintendo.png")) #nitrogen))
 
 
 Abund_Div_Image<-Abund_Div %>% 
   left_join(ResponseVariable_Images) %>% 
-  select(ResponseVariable,Treatment_Category,n_ab, Mean_ab,lowerinterval_ab,upperinterval_ab,n_div,Mean_div, lowerinterval_div, upperinterval_div,image) 
+  dplyr::select(ResponseVariable,Treatment_Category,n_ab, Mean_ab,lowerinterval_ab,upperinterval_ab,n_div,Mean_div, lowerinterval_div, upperinterval_div,image) 
 
 Abund_Div_Image[Abund_Div_Image==0]<-NA
 
@@ -1060,51 +1063,19 @@ Abund_Div_Image_Abiotic <- Abund_Div_Image_Abiotic %>%
   ungroup() %>% 
   mutate(Treatment=ifelse(Treatment_Category=="1yr",1,ifelse(Treatment_Category=="2-4yr",2,3)))
 
-###Cant figure out how to get position of points to dodge vertically. tried position dodge, fill, stack, identity
-ggplot(data=Abund_Div_Image_Abiotic,aes(x=Mean_ab, y=Treatment,fill=ResponseVariable)) +
-  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_text(size=55),axis.title.x=element_text(size=55))+
+ggplot(data=Abund_Div_Image_Abiotic,aes(x=Mean_ab, y=Treatment_Category,fill=ResponseVariable)) +
+  theme(axis.text.y=element_text(size=35),axis.text.x=element_text(size=35),axis.title.y=element_text(size=35,color="grey30"),axis.title.x=element_text(size=35,color="grey30"))+
   geom_vline(xintercept=0, linetype="dashed",size=2,color="grey25")+
+  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab),position=position_dodge(1), size = 2, height = 0.5)+
   geom_image(aes(image=image,fill=Treatment_Category), size=0.1,position=position_dodge(width=1))+
-  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab),position=position_jitter(), size = 2, height = 0.5)+
-  
-  geom_image(aes(image=image),position=position_jitter(width=1,height=1), size=0.1)+
-  geom_errorbarh(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab), position=position_dodge(0), size = 2, height = 0.5)+
-  scale_shape_manual(values=c(15,16),labels = c("TSC","TSN"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilCarbon","TotalSoilNitrogen"),name="Soil Nutrients",drop = FALSE)+
-  scale_y_discrete(labels = c("TSC","TSN"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilCarbon","TotalSoilNitrogen"),name="Soil Nutrients",drop = FALSE)+
-  scale_size_manual(values=c(0.2,0.2),labels = c("TSC","TSN"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilCarbon","TotalSoilNitrogen"),name="Soil Nutrients",drop = FALSE)+
-  scale_fill_manual(values=c("red","green","yellow"),labels = c("Annual Fire Regime (3,4)",
-                                                                 "2-4 Year Regime Fire (1,1)",
-                                                                 "Fire Regime with Grazing (2,2)"), 
-                    breaks = c("1yr","2-4yr","fire + grazing"),
-                    limits=c("fire + grazing","2-4yr","1yr"),drop = FALSE)+
-  #xlab(x_title_div)+
-  ylab("Response Variable")+
-  xlim(-5,5)+
-
-  annotate("text", x=-1.9, y=5, label = "F. Fire with Grazing", size=20)
-
-
-ggplot(data=Abund_Div_Image_Abiotic,aes(y=Mean_ab, x=Treatment,fill=ResponseVariable)) +
-  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_text(size=55),axis.title.x=element_text(size=55))+
-  geom_hline(yintercept=0, linetype="dashed",size=2,color="grey25")+
-  geom_image(aes(image=image,fill=Treatment_Category),position=position_stack(vhust=0.5), size=0.1)+
-  geom_errorbar(aes(xmin=lowerinterval_ab,xmax=upperinterval_ab),position_stack(vjust=0.5), size = 2, height = 0.5)
-
-
-
-ggplot(data[order(SoilNutrients$ResoponseVariable), ], aes(y=Treatment_Category,x=abundance,color=ResponseVariable, fill=ResponseVariable)) +
-  geom_vline(xintercept=0, linetype="dashed",color="grey25", size=2)+
-  geom_boxplot(lwd=2,position=position_dodge(1))+
-  scale_color_manual(values=c("darkslategray","darkslategray4"),labels = c("TSC","TSN"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilCarbon","TotalSoilNitrogen"),name="Soil Nutrients")+
-  scale_fill_manual(values=c("lightgrey","white"),labels = c("TSC","TSN"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilCarbon","TotalSoilNitrogen"),name="Soil Nutrients")+
+  scale_fill_manual(values=c("white","white"),labels=c("Soil TC","Soil TN"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilCarbon","TotalSoilNitrogen"),name="Soil Nutrients",drop = FALSE)+
+  scale_size_manual(values=c(0.1,0.1),labels=c("Soil TC","Soil TN"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilCarbon","TotalSoilNitrogen"),name="Soil Nutrients",drop = FALSE)+
   scale_y_discrete(labels = c("Annual Fire Regime (3,4)",
                               "2-4 Year Regime Fire (1,1)",
                               "Fire Regime with Grazing (2,2)"), breaks = c("1yr","2-4yr","fire + grazing"),limits=c("fire + grazing","2-4yr","1yr"))+
-  #xlab(x_title)+
+  xlab(x_title)+
   ylab("Fire Return Interval")+
-  xlim(-4,4)+
-  theme(axis.text.y=element_text(size=55),axis.text.x=element_text(size=55),axis.title.y=element_blank(),axis.title.x=element_text(size=55),legend.text=element_text(size=40),legend.title=element_blank(),legend.position = c(0.9,0.88),legend.key = element_rect(size=30), legend.key.size = unit(7.0, 'lines'))
-#save at 2500x1500
-  
+  xlim(-20,20)
+
 
 
