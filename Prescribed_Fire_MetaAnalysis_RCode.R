@@ -919,12 +919,12 @@ Abund_Div[is.na(Abund_Div)] <- 0
 ResponseVariable_Images<-Abund_Div %>% 
   dplyr::select(ResponseVariable) %>% 
   unique() %>% 
-  mutate(image = c("https://pixabay.com/get/g674f1a25d8abb04fe84c3813465802ef399474eabf95485e0f590d9e17306785c1bbf0dd9379954c738f28a381795881b4d8b5d626592df47dc21e6d4a74c85c770c34a54ca39f72f8ba0fce9c65bcd5_640.png", #arthropod
-                          "https://pixabay.com/get/gf4a2e41013433d30bcc7555e48191e49a702cf79e61c990a30801a142391aa1bf114f2faf88bfa504c8113ba20b5da558815e284bfd2c36c60723f6502f17b99d2784030c1edb96dbd63fc15f20abeef_640.png", #bird
-                          "https://pixabay.com/get/g252a827e4587cb862bb8c1a161b659bdda125a7ef45ff9bc0bb337768eec9702b8c6f6e5ec97f8e05cb2b312cb4be3bd03884c694ad9f0fa0bf49d97e4fabcea4b14941a2584179b9463f181f1e2c9b0_640.png", #plant
-                          "https://pixabay.com/get/g228640fee3e6bf56d8b8be7be075a5cfe38010ad845ae24c298d8ae31895ce77d42c992b53ac4dbb7ab788720a7adac97405ab3e930d5b1b56e793ea53091f13c8e0fde91fb8b8745da4758a799594e4_640.png", #small Mammal
-                          "https://pixabay.com/get/gb8bdf7d9a558f156b37885dd6cbc4a09863cf6782f981a8cdca7808c456805491783a36ad7b8afe378f1e85562c7c7c957741b2bac0b4169ef8e197eecfa7aedcca1c2f4bd026995632cdd0b3434d7d3_640.png", #carbon
-                          "https://img.icons8.com/glyph-neue/64/nintendo.png")) #nitrogen))
+  mutate(image = c("https://pixabay.com/get/g9b1aaf921dbe2422c599ee180429a539771c73a75c877d24ad7c84a2e21498fe23c2ad6da79c2b6deb198d1a6107df455c8fb70d6bb5890c06a10edbe9eec8f8e2e7d90350116a9469a12857afd2c7d1_640.png", #arthropod
+                          "https://pixabay.com/get/g4c486ffcaac59e23c18e0eafcda89ff7975f86bd0b695e14f88c35fc64d0dd35f3630c9d85dc679de315acf90433405efcc4e7eeb56d41c301c47004a340703ab2b885d9b4ef605aa6e1ce1e43db0fd4_640.png", #bird
+                          "https://pixabay.com/get/ga159a3d721900931b52fe5eecf64688df8728c0eacf5d69c50dacb1925a361d4f908dd7d88ca928f02878a2ada16b314242e62bbf5143f4d46bf7d23a6cbe2db6ec26bdf140d76cb5299e7a49c072ca2_640.png", #plant
+                          "https://pixabay.com/get/g9d7cee0b69584b4e406208e95c00e2cfe8871e81501784ba36bef1b87c3f612a3563c65adef32cb6dfbcf24851d2fc09f480d820a427108ceb4b4d587736e0c5b811cc97eb030ffb4b6c1fb8feb7a587_640.png", #small Mammal
+                          "https://pixabay.com/get/g34ae8fef5dd1ced1d29014ecc06a7aa8655fa00e0074eb152f20fe3833810d2b748c9b367f4346c33b9460f50a39a2501cecf19b6fc4d46ea7076faa7ddc45f0bfa5ec1f9da7038d656a334b335807f6_640.png", #carbon
+                          "https://pixabay.com/get/gd4772cc5c0ad990943148c7f75f947945bad14073d295a25cb847d8cf37b89240745485b16788b864f16992a335040f310902d63a7cb244cb5ddf6bdf14328aa79b9ed17b2d8a4cdd7bf4032ae3ac237_640.png")) #nitrogen))
 
 
 Abund_Div_Image<-Abund_Div %>% 
@@ -1070,11 +1070,11 @@ ggplot(data=Abund_Div_Image_Abiotic,aes(x=Mean_ab, y=Treatment_Category,fill=Res
   geom_image(aes(image=image,fill=Treatment_Category), size=0.1,position=position_dodge(width=1))+
   scale_fill_manual(values=c("white","white"),labels=c("Soil TC","Soil TN"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilCarbon","TotalSoilNitrogen"),name="Soil Nutrients",drop = FALSE)+
   scale_size_manual(values=c(0.1,0.1),labels=c("Soil TC","Soil TN"), breaks = c("TotalSoilCarbon","TotalSoilNitrogen"),limits=c("TotalSoilCarbon","TotalSoilNitrogen"),name="Soil Nutrients",drop = FALSE)+
-  scale_y_discrete(labels = c("Annual Fire Regime (3,4)",
-                              "2-4 Year Regime Fire (1,1)",
-                              "Fire Regime with Grazing (2,2)"), breaks = c("1yr","2-4yr","fire + grazing"),limits=c("fire + grazing","2-4yr","1yr"))+
+  scale_y_discrete(labels = c("Annual Fire Regime (n=3,4)",
+                              "2-4 Year Regime Fire (n=1,1)",
+                              "Fire Regime with Grazing (n=2,2)"), breaks = c("1yr","2-4yr","fire + grazing"),limits=c("fire + grazing","2-4yr","1yr"))+
   xlab(x_title)+
-  ylab("Fire Return Interval")+
+  ylab("Fire Return Frequencul")+
   xlim(-20,20)
 
 
